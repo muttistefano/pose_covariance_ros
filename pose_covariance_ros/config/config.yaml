@@ -1,0 +1,33 @@
+#cov_only valid: if true, the covariance value for elements of the transofmation matrix that are equal to zero is set to zero
+#e.g if the x element of the tranformation between two joints is 0, the covariance of x is set to 0 
+cov_only_valid: true
+
+#set the covariance matrix to zero for for the controlled value associated to the joint type
+ignore_joint_cov: true 
+
+#set the covariance matrix to zero for all the fixed joints transform 
+ignore_fixed_cov: true 
+
+# list of additional joints to publish, by default only the non fixed joints are published
+additional_joints: ['camera_joint_optical','ee_fixed_joint','camera_joint']
+
+# value of the default covaraince matrix
+# specific elements are set to zero depending on the joint tranform if cov_only_valid is set to true
+cov_def: [0.01, 0.0, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.01, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.01, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.01, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.01, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0, 0.01]
+
+
+# list of joints to override covariance matrix
+override_list: ['nopetest']
+
+# specific covaraince matrix for joints listed in override_list
+linear_motor_cursor_joint: [0.05, 0.0, 0.0, 0.0, 0.0, 0.0,
+                            0.0, 0.05, 0.0, 0.0, 0.0, 0.0,
+                            0.0, 0.0, 0.01, 0.0, 0.0, 0.0,
+                            0.0, 0.0, 0.0, 0.01, 0.0, 0.0,
+                            0.0, 0.0, 0.0, 0.0, 0.01, 0.0,
+                            0.0, 0.0, 0.0, 0.0, 0.0, 1]
