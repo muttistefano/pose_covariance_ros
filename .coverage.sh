@@ -16,4 +16,4 @@ rm "$ws/build/eigen_state_space_systems/coverage_report.info.cleaned"
 rm "$ws/build/eigen_state_space_systems/coverage_report.info.removed"
 
 # Actually upload coverage information
-bash <(curl -s https://codecov.io/bash) -s "$ws/build/eigen_state_space_systems/"
+bash <(curl -s https://codecov.io/bash) -s "$ws/build/eigen_state_space_systems/"  
