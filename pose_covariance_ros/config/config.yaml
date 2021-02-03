@@ -9,7 +9,7 @@ ignore_joint_cov: true
 ignore_fixed_cov: true 
 
 # list of additional joints to publish, by default only the non fixed joints are published
-additional_joints: ['camera_joint_optical','ee_fixed_joint','camera_joint']
+additional_joints: ['camera_joint_optical','ee_fixed_joint']
 
 # value of the default covaraince matrix
 # specific elements are set to zero depending on the joint tranform if cov_only_valid is set to true

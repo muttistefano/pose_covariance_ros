@@ -6,7 +6,6 @@ set(CMAKE_BUILD_TYPE Debug)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
-
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -14,7 +13,12 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   urdf
   tf2_ros
+  tf2_eigen
   rostest
+  std_msgs
+  trac_ik_lib
+  message_generation
+  ur_kinematics
 )
 
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
@@ -26,11 +30,24 @@ if(CATKIN_ENABLE_TESTING AND ENABLE_COVERAGE_TESTING)
   APPEND_COVERAGE_COMPILER_FLAGS()
 endif()
 
+
+add_service_files(
+  FILES
+  srv_opt.srv
+)
+
+add_message_files(
+  FILES
+  opt_return.msg
+
+)
+
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs  # Or other packages containing msgs
+  geometry_msgs
+)
 
 
 ###################################
@@ -44,10 +61,13 @@ endif()
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-  LIBRARIES pose_lie pose_covariance_ros
+  LIBRARIES pose_lie pose_covariance_ros pose_covariance_ros_optimization
 #  CATKIN_DEPENDS roscpp
-#  DEPENDS system_lib
+ DEPENDS message_runtime
+
 )
+
+
 
 ###########
 ## Build ##
@@ -69,6 +89,10 @@ add_library(pose_covariance_ros
  src/pose_covariance_ros.cpp
 )
 
+add_library(pose_covariance_ros_optimization
+ src/pose_covariance_ros_optimization.cpp
+)
+
 target_link_libraries(pose_lie
   ${catkin_LIBRARIES}
   Eigen3::Eigen
@@ -80,18 +104,27 @@ target_link_libraries(pose_covariance_ros
   pose_lie
  )
 
-add_dependencies(pose_lie             ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(pose_covariance_ros  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ target_link_libraries(pose_covariance_ros_optimization
+ ${catkin_LIBRARIES}
+ Eigen3::Eigen
+ pose_lie
+)
 
-install(TARGETS pose_lie pose_covariance_ros
+add_dependencies(pose_lie                          ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(pose_covariance_ros               ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(pose_covariance_ros_optimization  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+install(TARGETS pose_lie pose_covariance_ros pose_covariance_ros_optimization
  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-add_executable(${PROJECT_NAME}_node src/pose_covariance_ros_node.cpp)
+add_executable(${PROJECT_NAME}_node              src/pose_covariance_ros_node.cpp)
+add_executable(${PROJECT_NAME}_node_optimization src/pose_covariance_ros_node_optimization.cpp)
 
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_node              ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_node_optimization ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 target_link_libraries(${PROJECT_NAME}_node
@@ -99,9 +132,15 @@ target_link_libraries(${PROJECT_NAME}_node
   Eigen3::Eigen
   pose_covariance_ros
   pose_lie
-
  )
 
+target_link_libraries(${PROJECT_NAME}_node_optimization
+ ${catkin_LIBRARIES}
+ Eigen3::Eigen
+ pose_covariance_ros_optimization
+ pose_lie
+ ur10_kin.so
+)
 
 #############
 ## Install ##

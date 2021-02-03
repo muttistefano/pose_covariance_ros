@@ -10,7 +10,7 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <boost/range/combine.hpp>
-#include <pose_covariance_ros/pose_covariance_ros.hpp>
+#include <pose_covariance_ros/pose_covariance_ros_optimization.hpp>
 
 
 
@@ -129,13 +129,8 @@ TreeStructure::TreeStructure(tree_config cfg)
     }
 
     initJoints();
+    // srv_opt_ = nh_.advertiseService("srv_opt", (bool)&TreeStructure::optimize_joints,this);
 
-
-    cfg_.jnt_sub_  = nh_.subscribe(cfg_.joint_pub_name_, 1, &TreeStructure::poseCallback, this);
-    for (auto& jnt:it_names_)
-    {
-      pose_pub_.push_back(nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose_cov_" + jnt->name_, 1));
-    }
 //    plotTree();
   }
 
@@ -207,7 +202,14 @@ void TreeStructure::addNode(urdf::LinkSharedPtr ln_ptr)
                             jn->parent_to_joint_origin_transform.rotation.w);
 
 
-
+    if(jn->limits != NULL)
+    {
+      std::cout << jn->limits->lower << " " << jn->limits->upper << std::endl;
+      poses_.back().upper_limit = jn->limits->upper;
+      poses_.back().lower_limit = jn->limits->lower;
+    }
+    
+    
     //TODO cerca cov in paramtri per singolo giunto per nome
     //TODO covarianza per variabile controllo
 
@@ -297,69 +299,22 @@ void TreeStructure::randChain()
   }
 }
 
-void TreeStructure::poseCallback(const sensor_msgs::JointStateConstPtr &msg)
+void TreeStructure::updateall(std::array<double, 6> jnt) //#TODO
 {
-  for (int j=0;j<msg->name.size();j++) {
-    // std :: cout << msg->name[j] << " " << msg->position[j] << std::endl;
-    std::list<NodeTree*>::iterator it = it_names_.begin();
-    std::advance(it, j);
-    (*it)->updateNode(msg->position[j]);
+
+  std::list<NodeTree*>::iterator it = it_names_.begin();
+  for (int j=0;j<6;j++) {
+    // std::cout << (*it)->getName() << "" << jnt[j] <<std::endl;
+    (*it)->updateNode(jnt[j]);
+    // std::cout << (*it)->getName() << std::endl; //TODO testa con 2 catene , con il camera joint in cfg file
+    std::advance(it, 1);
   }
 
   this->computeChain();
 
-  for (int j=0;j<pose_pub_.size();j++) {
+  // std::cout << (*it_names_.back()).getName() << std::endl;
+  // std::cout << (*it_names_.back()).getPoseBase().getC() << std::endl;
 
-    std::list<NodeTree*>:: iterator it = it_names_.begin();
-    std::advance(it, j);
-
-    Eigen::Matrix<double, 4, 4, Eigen::RowMajor> tmpM4 = (*it)->getPoseBase().getMU();
-
-    // tf2::Vector3 origin;
-    // origin.setValue(tmpM4(0,3),tmpM4(1,3),tmpM4(2,3));
-
-    tf2::Matrix3x3 tf3d;
-    tf3d.setValue(tmpM4(0,0), tmpM4(0,1), tmpM4(0,2),
-                  tmpM4(1,0), tmpM4(1,1), tmpM4(1,2),
-                  tmpM4(2,0), tmpM4(2,1), tmpM4(2,2));
-
-    tf2::Quaternion tfqt;
-    tf3d.getRotation(tfqt);
-
-
-    // geometry_msgs::TransformStamped transformStamped;
-    // transformStamped.header.stamp = ros::Time::now();
-    // transformStamped.header.frame_id = "world";
-    // transformStamped.child_frame_id = msg->name[j] + "_cov";
-    // transformStamped.transform.translation.x = tmpM4(0,3);
-    // transformStamped.transform.translation.y = tmpM4(1,3);
-    // transformStamped.transform.translation.z = tmpM4(2,3);
-
-    // transformStamped.transform.rotation.x = tfqt.x();
-    // transformStamped.transform.rotation.y = tfqt.y();
-    // transformStamped.transform.rotation.z = tfqt.z();
-    // transformStamped.transform.rotation.w = tfqt.w();
-
-
-//TODO cerca cov in paramtri per singolo giunto per nome
-    geometry_msgs::PoseWithCovarianceStamped pose_msg;
-    pose_msg.header.stamp    = ros::Time::now();
-    pose_msg.header.frame_id = root_link_;
-    pose_msg.pose.pose.position.x    = tmpM4(0,3);
-    pose_msg.pose.pose.position.y    = tmpM4(1,3);
-    pose_msg.pose.pose.position.z    = tmpM4(2,3);
-    pose_msg.pose.pose.orientation.x = tfqt.x();
-    pose_msg.pose.pose.orientation.y = tfqt.y();
-    pose_msg.pose.pose.orientation.z = tfqt.z();
-    pose_msg.pose.pose.orientation.w = tfqt.w();
-    fillCovMsg((*it)->getPoseBase().getC(),pose_msg);
-
-    pose_pub_[j].publish(pose_msg);
-
-    // std::cout << it_names_[j]->getName() << "  " << pose_pub_[j].getTopic() << std::endl;
-
-  }
-  // plotTree();
 }
 
 void TreeStructure::getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses)
@@ -394,4 +349,110 @@ void TreeStructure::getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen:
   }
 }
 
+Eigen::Matrix<double, 6, 6, Eigen::RowMajor> TreeStructure::getTipCov()
+{
+  auto it = it_names_.back();
+  return (*it).getPoseBase().getC();
+};
 
+bool TreeStructure::optimize_joints(pose_covariance_ros::srv_opt::Request  &req, pose_covariance_ros::srv_opt::Response &res)
+{
+  std::vector<int>                                              max_idx = {0,0,0,0,0,0} ;
+  std::vector<double>                                           max_val = {10,10,10,10,10,10} ;
+  std::vector<std::array<double,6>>                             jnts; //TODO
+  Eigen::Matrix<double, 6, 6, Eigen::RowMajor>                  cov_tmp;
+  // std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>,6>   cov_vec;
+  std::vector<Eigen::Matrix<double,6, 6, Eigen::RowMajor>, Eigen::aligned_allocator<Eigen::Matrix<double,6, 6, Eigen::RowMajor> > > cov_vec;
+
+  for(int ini=0;ini<6;ini++)
+  {
+    cov_vec.push_back(Eigen::Matrix<double,6, 6, Eigen::RowMajor>());
+    jnts.push_back(std::array<double, 6>());
+  }
+
+  res.out.jnt_num.data = 6;
+
+  for (auto& ps:req.in.poses)
+  {
+
+    geometry_msgs::Point      pnt = ps.position;
+    geometry_msgs::Quaternion qua = ps.orientation;
+
+    tf2::Quaternion quat_tf;
+    tf2::convert(ps.orientation,quat_tf);
+    tf2::Matrix3x3 m(quat_tf);
+    Eigen::Matrix4d tf_base;
+
+    tf_base(0,0)=m[0][0];tf_base(0,1)=m[0][1];tf_base(0,2)=m[0][2];tf_base(0,3)=pnt.x;
+    tf_base(1,0)=m[1][0];tf_base(1,1)=m[1][1];tf_base(1,2)=m[1][2];tf_base(1,3)=pnt.y;
+    tf_base(2,0)=m[2][0];tf_base(2,1)=m[2][1];tf_base(2,2)=m[2][2];tf_base(2,3)=pnt.z;
+    tf_base(3,0)=0;      tf_base(3,1)=0;      tf_base(3,2)=0;      tf_base(3,3)=1;  
+
+    double* T = new double[16];
+
+    T[0]=m[0][0];T[1]=m[0][1];T[2]=m[0][2]; T[3]=pnt.x;
+    T[4]=m[1][0];T[5]=m[1][1];T[6]=m[1][2]; T[7]=pnt.y;
+    T[8]=m[2][0];T[9]=m[2][1];T[10]=m[2][2];T[11]=pnt.z;
+    T[12]=0;     T[13]=0;     T[14]=0;      T[15]=1;
+
+    double q_sols[8*6];
+    int num_sols;
+    num_sols = ur_kinematics::inverse(T, q_sols);
+
+    bool skip = false;
+    for (int j = 0; j<8*6 ; j++){if (isnan(q_sols[j])) skip = true;}
+    if (skip == true) continue;
+    std::cout << "sols : " << num_sols << std::endl;
+    for(int i=0;i<num_sols;i++)
+    {
+      printf("%1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n", q_sols[i*6+0], q_sols[i*6+1], q_sols[i*6+2], q_sols[i*6+3], q_sols[i*6+4], q_sols[i*6+5]);
+      std::array<double, 6> arr_jnt = {q_sols[i*6+0], q_sols[i*6+1], q_sols[i*6+2], q_sols[i*6+3], q_sols[i*6+4], q_sols[i*6+5]};
+      
+      this->updateall(arr_jnt);
+      std::cout << this->getTipCov() << std::endl;
+      cov_tmp = this->getTipCov();
+      for(int id=0;id<6;id++)
+      {
+        if(cov_tmp(id,id) < max_val[id])
+        {
+          max_val[id] = cov_tmp(id,id);
+          max_idx[id] = i;
+          cov_vec[id] = cov_tmp;
+          jnts[id]    = arr_jnt;
+        }
+      }
+      printf("\n");
+
+    }
+  }
+
+  printf("\n");
+  for (std::vector<double>::const_iterator i = max_val.begin(); i != max_val.end(); ++i)
+    std::cout << *i << ' ';
+  for (std::vector<int>::const_iterator i = max_idx.begin(); i != max_idx.end(); ++i)
+    std::cout << *i << ' ';
+  std::cout << std::endl;
+
+  
+
+  res.out.joints.resize(36);
+  res.out.cov.resize(36*6);
+
+  for(int pd=0;pd<6;pd++)
+  {
+    res.out.joints[pd*6    ].data = jnts[pd][0];
+    res.out.joints[pd*6 + 1].data = jnts[pd][1];
+    res.out.joints[pd*6 + 2].data = jnts[pd][2];
+    res.out.joints[pd*6 + 3].data = jnts[pd][3];
+    res.out.joints[pd*6 + 4].data = jnts[pd][4];
+    res.out.joints[pd*6 + 5].data = jnts[pd][5];
+
+    for(int cv = 0;cv<36;cv++)
+    {
+      res.out.cov[pd*36 + cv].data = cov_vec[pd](floor(cv/6.0),cv%6);
+    }
+
+  }
+
+  return true;
+}
