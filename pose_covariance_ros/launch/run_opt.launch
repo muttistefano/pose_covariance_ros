@@ -8,6 +8,7 @@
 <node name="pose_covariance_ros_opt_node_test" pkg="pose_covariance_ros" type="pose_covariance_ros_node_optimization" output="screen" launch-prefix="$(arg prefix)">
     <param name="robot_description_param" value="/robot_description"/> 
     <param name="joint_pub_topic" value="/joint_states"/> 
+    <param name="ik_library" value="/home/kolmogorov/Documents/ROS/Calib/src/calib_ur_guide/ur5_guideik.so"/> 
     <rosparam file="$(find pose_covariance_ros)/config/config.yaml" command="load" />
 </node>
 

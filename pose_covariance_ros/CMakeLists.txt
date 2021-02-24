@@ -16,9 +16,10 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_eigen
   rostest
   std_msgs
-  trac_ik_lib
+  moveit_core
+  moveit_ros_planning
   message_generation
-  ur_kinematics
+  # ur_kinematics
 )
 
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
@@ -104,27 +105,22 @@ target_link_libraries(pose_covariance_ros
   pose_lie
  )
 
- target_link_libraries(pose_covariance_ros_optimization
- ${catkin_LIBRARIES}
- Eigen3::Eigen
- pose_lie
-)
+
 
 add_dependencies(pose_lie                          ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(pose_covariance_ros               ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(pose_covariance_ros_optimization  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-install(TARGETS pose_lie pose_covariance_ros pose_covariance_ros_optimization
+
+
+install(TARGETS pose_lie pose_covariance_ros 
  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
 add_executable(${PROJECT_NAME}_node              src/pose_covariance_ros_node.cpp)
-add_executable(${PROJECT_NAME}_node_optimization src/pose_covariance_ros_node_optimization.cpp)
-
 add_dependencies(${PROJECT_NAME}_node              ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_node_optimization ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 
 target_link_libraries(${PROJECT_NAME}_node
@@ -134,13 +130,27 @@ target_link_libraries(${PROJECT_NAME}_node
   pose_lie
  )
 
-target_link_libraries(${PROJECT_NAME}_node_optimization
- ${catkin_LIBRARIES}
- Eigen3::Eigen
- pose_covariance_ros_optimization
- pose_lie
- ur10_kin.so
+
+#  if(OPT)
+#   message("Compiling optimization node")
+
+target_link_libraries(pose_covariance_ros_optimization
+  ${catkin_LIBRARIES}
+  Eigen3::Eigen
+  pose_lie
 )
+add_dependencies(pose_covariance_ros_optimization  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_executable(${PROJECT_NAME}_node_optimization src/pose_covariance_ros_node_optimization.cpp)
+add_dependencies(${PROJECT_NAME}_node_optimization ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_node_optimization
+  ${catkin_LIBRARIES}
+  Eigen3::Eigen
+  pose_covariance_ros_optimization
+  pose_lie
+)
+# endif()
+
+
 
 #############
 ## Install ##

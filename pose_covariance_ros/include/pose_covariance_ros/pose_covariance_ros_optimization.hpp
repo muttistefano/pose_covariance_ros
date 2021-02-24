@@ -21,14 +21,16 @@
 #include <trac_ik/trac_ik.hpp>
 #include <Eigen/StdVector>
 #include <std_msgs/Int32.h>
+#include <boost/dll/shared_library.hpp>
 
+#include <moveit/robot_model_loader/robot_model_loader.h>
+#include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_state/robot_state.h>
 
-#define IKFAST_NO_MAIN true
-// #define IKFAST_HAS_LIBRARY
-// #include <ikfast.h>
-
-#include <ur_kinematics/ur_kin.h>
-
+#define IKFAST_NO_MAIN 
+#define IKFAST_HAS_LIBRARY
+#define IKFAST_CLIBRARY
+#include <ikfast.h>
 
 // Get matrix from parameter server
 inline bool getParamMatrix(const ros::NodeHandle& nh, const std::string& key, Eigen::Matrix<double, 6, 6, Eigen::RowMajor>& Mat)
@@ -150,6 +152,7 @@ class TreeStructure
     std::string                                               root_link_;
     ros::NodeHandle                                           nh_;
     std::list<NodeTree*>                                      it_names_;
+    int                                                       act_joints_;
     tf2_ros::TransformBroadcaster                             br_;
     tree_config                                               cfg_;
     // ros::ServiceServer                                        srv_opt_;
@@ -182,7 +185,7 @@ class TreeStructure
 
     void randChain();
 
-    void updateall(std::array<double, 6> jnt);
+    void updateall(std::vector<double> jnt);
 
     void getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses); 
 

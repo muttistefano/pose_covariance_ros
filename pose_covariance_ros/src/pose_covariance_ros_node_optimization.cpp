@@ -112,7 +112,7 @@ int main(int argc, char** argv)
     
 
 
-    TreeStructure tree = TreeStructure(cfg);
+    TreeStructure tree    = TreeStructure(cfg);
     ros::ServiceServer ss = nh.advertiseService("srv_opt", &TreeStructure::optimize_joints, &tree);
 
     ros::AsyncSpinner spinner(4); // Use 4 threads

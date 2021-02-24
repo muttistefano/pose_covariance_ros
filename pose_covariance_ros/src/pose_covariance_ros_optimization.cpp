@@ -1,17 +1,4 @@
-#include "ros/ros.h"
-#include <sensor_msgs/JointState.h>
-#include <algorithm>
-#include <urdf/model.h>
-#include <ros/console.h>
-#include <Eigen/Core>
-#include <XmlRpc.h>
-// #include <tf/transform_listener.h>
-#include <tf2/utils.h>
-#include <tf2_ros/transform_listener.h>
-#include <tf2_ros/transform_broadcaster.h>
-#include <boost/range/combine.hpp>
 #include <pose_covariance_ros/pose_covariance_ros_optimization.hpp>
-
 
 
 
@@ -129,6 +116,8 @@ TreeStructure::TreeStructure(tree_config cfg)
     }
 
     initJoints();
+    std::cout << "Controlled joints : " << it_names_.size() << "\n"; 
+    act_joints_ =  it_names_.size();
     // srv_opt_ = nh_.advertiseService("srv_opt", (bool)&TreeStructure::optimize_joints,this);
 
 //    plotTree();
@@ -143,9 +132,9 @@ void TreeStructure::initJoints()
 
  ;
 
-  for (auto& namemsg:(*jnt_0).name)
+  for (auto& it:poses_)
   {
-    for (auto& it:poses_)
+    for (auto& namemsg:(*jnt_0).name)
     {
       if(it.name_ == namemsg) it_names_.push_back(&it);
     }
@@ -299,11 +288,12 @@ void TreeStructure::randChain()
   }
 }
 
-void TreeStructure::updateall(std::array<double, 6> jnt) //#TODO
+void TreeStructure::updateall(std::vector<double> jnt) //#TODO
 {
 
   std::list<NodeTree*>::iterator it = it_names_.begin();
-  for (int j=0;j<6;j++) {
+  
+  for (int j=0;j<act_joints_;j++) {
     // std::cout << (*it)->getName() << "" << jnt[j] <<std::endl;
     (*it)->updateNode(jnt[j]);
     // std::cout << (*it)->getName() << std::endl; //TODO testa con 2 catene , con il camera joint in cfg file
@@ -352,107 +342,95 @@ void TreeStructure::getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen:
 Eigen::Matrix<double, 6, 6, Eigen::RowMajor> TreeStructure::getTipCov()
 {
   auto it = it_names_.back();
+  std::cout << (*it).getName();
   return (*it).getPoseBase().getC();
 };
 
 bool TreeStructure::optimize_joints(pose_covariance_ros::srv_opt::Request  &req, pose_covariance_ros::srv_opt::Response &res)
 {
-  std::vector<int>                                              max_idx = {0,0,0,0,0,0} ;
-  std::vector<double>                                           max_val = {10,10,10,10,10,10} ;
-  std::vector<std::array<double,6>>                             jnts; //TODO
+  // std::vector<double>                                           max_val = {10,10,10,10,10,10} ;
+  std::vector<double>                                           max_val = {std::numeric_limits<double>::max(),std::numeric_limits<double>::max(),std::numeric_limits<double>::max(),std::numeric_limits<double>::max(),std::numeric_limits<double>::max(),std::numeric_limits<double>::max()} ;
+  
+  std::vector<std::vector<double>>                              jnts; //TODO
   Eigen::Matrix<double, 6, 6, Eigen::RowMajor>                  cov_tmp;
   // std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>,6>   cov_vec;
   std::vector<Eigen::Matrix<double,6, 6, Eigen::RowMajor>, Eigen::aligned_allocator<Eigen::Matrix<double,6, 6, Eigen::RowMajor> > > cov_vec;
 
   for(int ini=0;ini<6;ini++)
   {
-    cov_vec.push_back(Eigen::Matrix<double,6, 6, Eigen::RowMajor>());
-    jnts.push_back(std::array<double, 6>());
+    cov_vec.push_back(Eigen::Matrix<double,6, 6, Eigen::RowMajor>::Zero());
+    jnts.push_back(std::vector<double>(act_joints_,0));
   }
 
-  res.out.jnt_num.data = 6;
+  res.out.jnt_num.data = act_joints_;
 
+  robot_model_loader::RobotModelLoader robot_model_loader("/robot_description");
+  robot_model::RobotModelPtr kinematic_model = robot_model_loader.getModel();
+  robot_state::RobotStatePtr kinematic_state(new robot_state::RobotState(kinematic_model));
+  const robot_state::JointModelGroup* joint_model_group = kinematic_model->getJointModelGroup("ur5_track");
+  const std::vector<std::string> &joint_names = joint_model_group->getJointModelNames();
+
+  int sols = 0;
   for (auto& ps:req.in.poses)
   {
 
-    geometry_msgs::Point      pnt = ps.position;
-    geometry_msgs::Quaternion qua = ps.orientation;
+    bool found_ik = kinematic_state->setFromIK(joint_model_group, ps, 0.2);
+    std::vector<double> joint_values;
 
-    tf2::Quaternion quat_tf;
-    tf2::convert(ps.orientation,quat_tf);
-    tf2::Matrix3x3 m(quat_tf);
-    Eigen::Matrix4d tf_base;
 
-    tf_base(0,0)=m[0][0];tf_base(0,1)=m[0][1];tf_base(0,2)=m[0][2];tf_base(0,3)=pnt.x;
-    tf_base(1,0)=m[1][0];tf_base(1,1)=m[1][1];tf_base(1,2)=m[1][2];tf_base(1,3)=pnt.y;
-    tf_base(2,0)=m[2][0];tf_base(2,1)=m[2][1];tf_base(2,2)=m[2][2];tf_base(2,3)=pnt.z;
-    tf_base(3,0)=0;      tf_base(3,1)=0;      tf_base(3,2)=0;      tf_base(3,3)=1;  
-
-    double* T = new double[16];
-
-    T[0]=m[0][0];T[1]=m[0][1];T[2]=m[0][2]; T[3]=pnt.x;
-    T[4]=m[1][0];T[5]=m[1][1];T[6]=m[1][2]; T[7]=pnt.y;
-    T[8]=m[2][0];T[9]=m[2][1];T[10]=m[2][2];T[11]=pnt.z;
-    T[12]=0;     T[13]=0;     T[14]=0;      T[15]=1;
-
-    double q_sols[8*6];
-    int num_sols;
-    num_sols = ur_kinematics::inverse(T, q_sols);
-
-    bool skip = false;
-    for (int j = 0; j<8*6 ; j++){if (isnan(q_sols[j])) skip = true;}
-    if (skip == true) continue;
-    std::cout << "sols : " << num_sols << std::endl;
-    for(int i=0;i<num_sols;i++)
+    if (found_ik)
     {
-      printf("%1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n", q_sols[i*6+0], q_sols[i*6+1], q_sols[i*6+2], q_sols[i*6+3], q_sols[i*6+4], q_sols[i*6+5]);
-      std::array<double, 6> arr_jnt = {q_sols[i*6+0], q_sols[i*6+1], q_sols[i*6+2], q_sols[i*6+3], q_sols[i*6+4], q_sols[i*6+5]};
-      
-      this->updateall(arr_jnt);
-      std::cout << this->getTipCov() << std::endl;
+      kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
+      // for(std::size_t i=0; i < joint_names.size(); ++i)
+      // {
+      //   ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
+      // }
+      sols++;
+      this->updateall(joint_values);
+      // std::cout << this->getTipCov() << std::endl;
       cov_tmp = this->getTipCov();
       for(int id=0;id<6;id++)
       {
         if(cov_tmp(id,id) < max_val[id])
         {
           max_val[id] = cov_tmp(id,id);
-          max_idx[id] = i;
           cov_vec[id] = cov_tmp;
-          jnts[id]    = arr_jnt;
+          jnts[id]    = joint_values;
         }
       }
-      printf("\n");
-
     }
-  }
-
-  printf("\n");
-  for (std::vector<double>::const_iterator i = max_val.begin(); i != max_val.end(); ++i)
-    std::cout << *i << ' ';
-  for (std::vector<int>::const_iterator i = max_idx.begin(); i != max_idx.end(); ++i)
-    std::cout << *i << ' ';
-  std::cout << std::endl;
-
-  
-
-  res.out.joints.resize(36);
-  res.out.cov.resize(36*6);
-
-  for(int pd=0;pd<6;pd++)
-  {
-    res.out.joints[pd*6    ].data = jnts[pd][0];
-    res.out.joints[pd*6 + 1].data = jnts[pd][1];
-    res.out.joints[pd*6 + 2].data = jnts[pd][2];
-    res.out.joints[pd*6 + 3].data = jnts[pd][3];
-    res.out.joints[pd*6 + 4].data = jnts[pd][4];
-    res.out.joints[pd*6 + 5].data = jnts[pd][5];
-
-    for(int cv = 0;cv<36;cv++)
+    else
     {
-      res.out.cov[pd*36 + cv].data = cov_vec[pd](floor(cv/6.0),cv%6);
+      // ROS_INFO("Did not find IK solution");
+      continue;//TODO
     }
+ 
+    
 
   }
 
-  return true;
+  if(sols>0){
+    res.out.joints.resize(act_joints_ * 6);
+    res.out.cov.resize(36*6);
+    for(int pd=0;pd<6;pd++)
+    {
+      for(int pix=0;pix<act_joints_;pix++)
+      {
+        res.out.joints[pd*act_joints_ + pix].data = jnts[pd][pix];
+      }
+      
+      for(int cv = 0;cv<36;cv++)
+      {
+        res.out.cov[pd*36 + cv].data = cov_vec[pd](floor(cv/6.0),cv%6);
+      }
+
+    }
+    ROS_INFO("Ok");
+    return true;
+  }
+  else
+  {
+    ROS_INFO("Not OK");
+    return false;
+  }
 }
