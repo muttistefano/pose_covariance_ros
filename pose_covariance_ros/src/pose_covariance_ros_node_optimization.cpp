@@ -24,6 +24,12 @@ int main(int argc, char** argv)
     }
 
 
+    if (nh.hasParam("planning_group_name"))
+    {
+        nh.getParam("group_name", cfg.planning_group_name);
+        ROS_INFO("group_name :  %d", cfg.planning_group_name);
+    }
+
     // retrieves parameter to ingore covariance of joints value
     if (nh.hasParam("ignore_joint_cov"))
     {

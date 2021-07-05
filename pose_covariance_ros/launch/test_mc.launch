@@ -1,0 +1,16 @@
+<launch>
+
+
+
+<node name="test" pkg="pose_covariance_ros" type="test.py" output="screen" >
+    <param name="joint_pub_topic" value="/joint_states"/> 
+    <rosparam file="$(find pose_covariance_ros)/config/test.yaml" command="load" />
+</node>
+
+<node name="pose_covariance_ros_node_test" pkg="pose_covariance_ros" type="pose_covariance_ros_node" output="screen" >
+    <param name="robot_description_param" value="/robot_description"/> 
+    <param name="joint_pub_topic" value="/joint_states"/> 
+    <rosparam file="$(find pose_covariance_ros)/config/config.yaml" command="load" />
+</node>
+
+</launch>

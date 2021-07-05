@@ -367,7 +367,7 @@ bool TreeStructure::optimize_joints(pose_covariance_ros::srv_opt::Request  &req,
   robot_model_loader::RobotModelLoader robot_model_loader("/robot_description");
   robot_model::RobotModelPtr kinematic_model = robot_model_loader.getModel();
   robot_state::RobotStatePtr kinematic_state(new robot_state::RobotState(kinematic_model));
-  const robot_state::JointModelGroup* joint_model_group = kinematic_model->getJointModelGroup("ur5_track");
+  const robot_state::JointModelGroup* joint_model_group = kinematic_model->getJointModelGroup(cfg_.planning_group_name);
   const std::vector<std::string> &joint_names = joint_model_group->getJointModelNames();
 
   int sols = 0;

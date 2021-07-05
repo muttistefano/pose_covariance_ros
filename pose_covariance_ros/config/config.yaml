@@ -9,20 +9,20 @@ ignore_joint_cov: true
 ignore_fixed_cov: true 
 
 # list of additional joints to publish, by default only the non fixed joints are published
-additional_joints: ['camera_joint_optical','ee_fixed_joint']
+additional_joints: []
 
 # value of the default covaraince matrix
 # specific elements are set to zero depending on the joint tranform if cov_only_valid is set to true
-cov_def: [0.01, 0.0, 0.0, 0.0, 0.0, 0.0,
-          0.0, 0.01, 0.0, 0.0, 0.0, 0.0,
-          0.0, 0.0, 0.01, 0.0, 0.0, 0.0,
-          0.0, 0.0, 0.0, 0.01, 0.0, 0.0,
-          0.0, 0.0, 0.0, 0.0, 0.01, 0.0,
-          0.0, 0.0, 0.0, 0.0, 0.0, 0.01]
+cov_def: [0.003, 0.0, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.003, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.003, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.002, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.002, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0, 0.002]
 
 
 # list of joints to override covariance matrix
-override_list: ['nopetest']
+override_list: []
 
 # specific covaraince matrix for joints listed in override_list
 linear_motor_cursor_joint: [0.05, 0.0, 0.0, 0.0, 0.0, 0.0,

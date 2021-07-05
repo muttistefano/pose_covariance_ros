@@ -27,10 +27,6 @@
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
 
-#define IKFAST_NO_MAIN 
-#define IKFAST_HAS_LIBRARY
-#define IKFAST_CLIBRARY
-#include <ikfast.h>
 
 // Get matrix from parameter server
 inline bool getParamMatrix(const ros::NodeHandle& nh, const std::string& key, Eigen::Matrix<double, 6, 6, Eigen::RowMajor>& Mat)
@@ -130,6 +126,7 @@ struct tree_config{
   std::vector<std::string>                                  jnt_ignore_;
   std::vector<std::string>                                  jnt_add_;
   std::string                                               joint_pub_name_   = "/joint_states";
+  std::string                                               planning_group_name = "manipulator";
   bool                                                      ignore_fixed_     = false;
   bool                                                      cov_only_valid_   = true;
   bool                                                      ignore_joint_cov_ = false;
