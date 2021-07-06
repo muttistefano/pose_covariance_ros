@@ -18,7 +18,7 @@
 #include <pose_covariance_ros/srv_opt.h>
 #include <pose_covariance_ros/opt_return.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <trac_ik/trac_ik.hpp>
+// #include <trac_ik/trac_ik.hpp>
 #include <Eigen/StdVector>
 #include <std_msgs/Int32.h>
 #include <boost/dll/shared_library.hpp>
@@ -26,6 +26,8 @@
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
+#include <moveit/planning_scene/planning_scene.h>
+
 
 
 // Get matrix from parameter server

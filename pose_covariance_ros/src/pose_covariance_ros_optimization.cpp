@@ -346,11 +346,37 @@ Eigen::Matrix<double, 6, 6, Eigen::RowMajor> TreeStructure::getTipCov()
   return (*it).getPoseBase().getC();
 };
 
+bool isValid(planning_scene::PlanningSceneConstPtr scene,
+	             bool ignore_collisions,
+	             std::vector< std::vector<double> >* old_solutions,
+	             robot_state::RobotState* state,
+	             const robot_model::JointModelGroup* jmg,
+	             const double* joint_positions){
+		for( std::vector<double> sol : *old_solutions ){
+			if( jmg->distance(joint_positions, sol.data()) < 0.1 ){
+				return false;
+			}
+		}
+
+		if(ignore_collisions)
+			return true;
+
+		state->setJointGroupPositions(jmg, joint_positions);
+		state->update();
+		if( scene->isStateColliding(const_cast<const robot_state::RobotState&>(*state), jmg->getName()) ){
+			old_solutions->emplace_back();
+			state->copyJointGroupPositions(jmg, old_solutions->back());
+			return false;
+		}
+		return true;
+	}
+
+
 bool TreeStructure::optimize_joints(pose_covariance_ros::srv_opt::Request  &req, pose_covariance_ros::srv_opt::Response &res)
 {
-  // std::vector<double>                                           max_val = {10,10,10,10,10,10} ;
+  // std::vector<double>                                           seed = {0,0,0,0,0,0} ;
   std::vector<double>                                           max_val = {std::numeric_limits<double>::max(),std::numeric_limits<double>::max(),std::numeric_limits<double>::max(),std::numeric_limits<double>::max(),std::numeric_limits<double>::max(),std::numeric_limits<double>::max()} ;
-  
+
   std::vector<std::vector<double>>                              jnts; //TODO
   Eigen::Matrix<double, 6, 6, Eigen::RowMajor>                  cov_tmp;
   // std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>,6>   cov_vec;
@@ -366,13 +392,30 @@ bool TreeStructure::optimize_joints(pose_covariance_ros::srv_opt::Request  &req,
 
   robot_model_loader::RobotModelLoader robot_model_loader("/robot_description");
   robot_model::RobotModelPtr kinematic_model = robot_model_loader.getModel();
+  // planning_scene::PlanningScene planning_scene(kinematic_model);
   robot_state::RobotStatePtr kinematic_state(new robot_state::RobotState(kinematic_model));
   const robot_state::JointModelGroup* joint_model_group = kinematic_model->getJointModelGroup(cfg_.planning_group_name);
   const std::vector<std::string> &joint_names = joint_model_group->getJointModelNames();
 
+  // std::vector< std::vector<double> > previous_solutions_;
+  // const moveit::core::GroupStateValidityCallbackFn is_valid =
+	// 	std::bind(
+	// 		&isValid,
+	// 		planning_scene,
+	// 		false,
+	// 		&previous_solutions_,
+	// 		std::placeholders::_1,
+	// 		std::placeholders::_2,
+	// 		std::placeholders::_3);
+
+
+  // const kinematics::KinematicsBaseConstPtr solver = joint_model_group->getSolverInstance();
+
   int sols = 0;
   for (auto& ps:req.in.poses)
   {
+
+    // solver->getPositionIK(ps, seed, jnt_all, res_ik, opt);
 
     bool found_ik = kinematic_state->setFromIK(joint_model_group, ps, 0.2);
     std::vector<double> joint_values;
