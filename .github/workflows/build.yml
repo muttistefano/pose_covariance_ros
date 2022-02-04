@@ -21,7 +21,8 @@ jobs:
         CCACHE_DIR: "${{ github.workspace }}/.ccache" 
         SONAR_SCANNER_VERSION: 4.4.0.2170
         SONAR_SERVER_URL: "https://sonarcloud.io"
-        BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
+        # BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
+        BUILD_WRAPPER_OUT_DIR: build
         ISOLATION: "shell"
       steps:
         - uses: actions/checkout@v2 
@@ -73,7 +74,7 @@ jobs:
             echo "sonar.cfamily.threads=2" >> ${{ github.workspace }}/sonar-project.properties
             echo "sonar.cfamily.cache.enabled=false" >> ${{ github.workspace }}/sonar-project.properties
             echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> ${{ github.workspace }}/sonar-project.properties
-            cat /home/runner/target_ws/build/pose_covariance_ros/compile_commands.json
+            # cat /home/runner/target_ws/build/pose_covariance_ros/compile_commands.json
 
         - name: Run build-wrapper
           run: |
@@ -81,6 +82,7 @@ jobs:
             catkin clean -y
             source /opt/ros/noetic/setup.bash
             build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} catkin build
+            ls build
         - name: Run sonar-scanner
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
