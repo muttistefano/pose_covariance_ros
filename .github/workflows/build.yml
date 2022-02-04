@@ -79,6 +79,7 @@ jobs:
           run: |
             cd /home/runner/target_ws
             catkin clean -y
+            source /opt/ros/noetic/setup.bash
             build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} catkin build
         - name: Run sonar-scanner
           env:
