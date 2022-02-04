@@ -77,10 +77,10 @@ jobs:
         - name: Run build-wrapper
           run: |
             ls
-            cd /home/runner/target_ws
-            catkin clean -y
+            cd /home/runner/target_ws/build/pose_covariance_ros/
+            # catkin clean -y
             source /opt/ros/noetic/setup.bash
-            build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} catkin build
+            build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make clean all
             ls build
         - name: Run sonar-scanner
           env:
