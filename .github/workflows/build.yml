@@ -75,15 +75,15 @@ jobs:
             echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> ${{ github.workspace }}/sonar-project.properties
             cat /home/runner/target_ws/build/pose_covariance_ros/compile_commands.json
 
-        # - name: Run build-wrapper
-        #   run: |
-        #     pwd
-        #     ls  /home/runner/target_ws/build
-        #     build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build /home/runner/target_ws/build
+        - name: Run build-wrapper
+          run: |
+            cd /home/runner/target_ws
+            catkin clean
+            build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} catkin build
         - name: Run sonar-scanner
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           run: |
-            # sonar-scanner --define sonar.host.url="${{ env.SONAR_SERVER_URL }}" --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
-            sonar-scanner -X
+            sonar-scanner --define sonar.host.url="${{ env.SONAR_SERVER_URL }}" --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
+            # sonar-scanner -X
