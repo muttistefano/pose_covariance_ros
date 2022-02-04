@@ -22,7 +22,7 @@ jobs:
         SONAR_SCANNER_VERSION: 4.4.0.2170
         SONAR_SERVER_URL: "https://sonarcloud.io"
         # BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
-        BUILD_WRAPPER_OUT_DIR: build
+        BUILD_WRAPPER_OUT_DIR: /home/runner/
         ISOLATION: "shell"
       steps:
         - uses: actions/checkout@v2 
