@@ -54,6 +54,15 @@
   <build_export_depend>roscpp</build_export_depend>
   <exec_depend>roscpp</exec_depend>
 
+  <build_depend>moveit_ros_planning</build_depend>
+  <exec_depend>moveit_ros_planning</exec_depend>
+  <build_depend>tf2_ros</build_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <build_depend>tf2_eigen</build_depend>
+  <exec_depend>tf2_eigen</exec_depend>
+  <build_depend>moveit_core</build_depend>
+  <exec_depend>moveit_core</exec_depend>
+
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
 
