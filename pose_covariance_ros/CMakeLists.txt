@@ -201,20 +201,20 @@ install(DIRECTORY include/*/
 
 
 
-if (CATKIN_ENABLE_TESTING)
+# if (CATKIN_ENABLE_TESTING)
 
-add_rostest_gtest(test_cpp test/test.launch test/test0.cpp)
-add_dependencies(test_cpp ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test_cpp ${catkin_LIBRARIES} ${rostest_LIBRARIES} Eigen3::Eigen pose_covariance_ros pose_lie)
-target_compile_options(test_cpp PUBLIC $<$<CONFIG:Release>:-Ofast -march=native -mavx>)
+# add_rostest_gtest(test_cpp test/test.launch test/test0.cpp)
+# add_dependencies(test_cpp ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(test_cpp ${catkin_LIBRARIES} ${rostest_LIBRARIES} Eigen3::Eigen pose_covariance_ros pose_lie)
+# target_compile_options(test_cpp PUBLIC $<$<CONFIG:Release>:-Ofast -march=native -mavx>)
 
 
-if(ENABLE_COVERAGE_TESTING)
-  set(COVERAGE_EXCLUDES "*/${PROJECT_NAME}/test*")
-  add_code_coverage(
-    NAME coverage_report
-    DEPENDENCIES test_cpp 
-  )
-endif()
+# if(ENABLE_COVERAGE_TESTING)
+#   set(COVERAGE_EXCLUDES "*/${PROJECT_NAME}/test*")
+#   add_code_coverage(
+#     NAME coverage_report
+#     DEPENDENCIES test_cpp 
+#   )
+# endif()
 
-endif()
+# endif()
