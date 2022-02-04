@@ -14,7 +14,7 @@ jobs:
         matrix: 
           ROS_DISTRO: [noetic]
           ROS_REPO:   [main]
-          CMAKE_ARGS: [-DCMAKE_EXPORT_COMPILE_COMMANDS=1]
+          # CMAKE_ARGS: [-DCMAKE_EXPORT_COMPILE_COMMANDS=1]
           include: 
             - {ROS_DISTRO: noetic, ROS_REPO: main}
       env:
@@ -57,19 +57,19 @@ jobs:
         #     curl -sSLo $HOME/.sonar/sonar-scanner.zip ${{ env.SONAR_SCANNER_DOWNLOAD_URL }} 
         #     unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
         #     echo "$HOME/.sonar/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}-linux/bin" >> $GITHUB_PATH
-        # - name: Download and set up build-wrapper
-        #   env:
-        #     BUILD_WRAPPER_DOWNLOAD_URL: ${{ env.SONAR_SERVER_URL }}/static/cpp/build-wrapper-linux-x86.zip
-        #   run: |
-        #     curl -sSLo $HOME/.sonar/build-wrapper-linux-x86.zip ${{ env.BUILD_WRAPPER_DOWNLOAD_URL }}
-        #     unzip -o $HOME/.sonar/build-wrapper-linux-x86.zip -d $HOME/.sonar/
-        #     echo "$HOME/.sonar/build-wrapper-linux-x86" >> $GITHUB_PATH
+        - name: Download and set up build-wrapper
+          env:
+            BUILD_WRAPPER_DOWNLOAD_URL: ${{ env.SONAR_SERVER_URL }}/static/cpp/build-wrapper-linux-x86.zip
+          run: |
+            curl -sSLo /home/runner/.sonar/build-wrapper-linux-x86.zip ${{ env.BUILD_WRAPPER_DOWNLOAD_URL }}
+            unzip -o /home/runner/.sonar/build-wrapper-linux-x86.zip -d /home/runner/.sonar/
+            echo "/home/runner/.sonar/build-wrapper-linux-x86" >> $GITHUB_PATH
         - name: Configure sonar-scanner
           run: |
             # echo "$/home/runner/.sonar/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}-linux/bin" >> $GITHUB_PATH
             echo "sonar.projectKey=cov_pkg" >> ${{ github.workspace }}/sonar-project.properties
             echo "sonar.organization=mutti" >> ${{ github.workspace }}/sonar-project.properties
-            echo "sonar.cfamily.compile-commands=/home/runner/target_ws/build/pose_covariance_ros/compile_commands.json" >> ${{ github.workspace }}/sonar-project.properties
+            # echo "sonar.cfamily.compile-commands=/home/runner/target_ws/build/pose_covariance_ros/compile_commands.json" >> ${{ github.workspace }}/sonar-project.properties
             echo "sonar.cfamily.threads=2" >> ${{ github.workspace }}/sonar-project.properties
             echo "sonar.cfamily.cache.enabled=false" >> ${{ github.workspace }}/sonar-project.properties
             echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> ${{ github.workspace }}/sonar-project.properties
