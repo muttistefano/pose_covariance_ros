@@ -15,7 +15,7 @@ jobs:
           ROS_DISTRO: [noetic]
           ROS_REPO:   [main]
           include: 
-            - {ROS_DISTRO: noetic, ROS_REPO: testing}
+            - {ROS_DISTRO: noetic, ROS_REPO: main}
       env:
         CCACHE_DIR: "${{ github.workspace }}/.ccache" 
       steps:
