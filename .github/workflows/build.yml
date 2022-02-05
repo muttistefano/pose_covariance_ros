@@ -17,61 +17,57 @@ jobs:
           include: 
             - {ROS_DISTRO: noetic, ROS_REPO: main}
       env:
-        CCACHE_DIR: "${{ github.workspace }}/.ccache" 
+        CCACHE_DIR: "/home/runner/target_ws/.ccache" 
         SONAR_SCANNER_VERSION: 4.4.0.2170
         SONAR_SERVER_URL: "https://sonarcloud.io"
         # BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
-        BUILD_WRAPPER_OUT_DIR: /home/runner/
+        BUILD_WRAPPER_OUT_DIR: .
         ISOLATION: "shell"
       steps:
         - uses: actions/checkout@v2 
+        
         - uses: actions/cache@v2 
           with:
             path: ${{ env.CCACHE_DIR }}
             key: ccache-${{ matrix.ROS_DISTRO }}-${{ matrix.ROS_REPO }}-${{github.run_id}}
             restore-keys: |
               ccache-${{ matrix.ROS_DISTRO }}-${{ matrix.ROS_REPO }}-
+        
         - uses: 'ros-industrial/industrial_ci@master' 
           env: 
             ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
             ROS_REPO: ${{ matrix.ROS_REPO }}
+        
         - name: Set up JDK 11
           uses: actions/setup-java@v1
           with:
             java-version: 11
+        
         - name: Download and set up sonar-scanner
           env:
             SONAR_SCANNER_DOWNLOAD_URL: https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${{ env.SONAR_SCANNER_VERSION }}-linux.zip
           run: |
-            mkdir -p /home/runner/.sonar
-            curl -sSLo /home/runner/.sonar/sonar-scanner.zip ${{ env.SONAR_SCANNER_DOWNLOAD_URL }} 
-            unzip -o /home/runner/.sonar/sonar-scanner.zip -d /home/runner/.sonar/
-            echo "/home/runner/.sonar/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}-linux/bin" >> $GITHUB_PATH
+            curl -sSLo /home/runner/target_ws/sonar-scanner.zip ${{ env.SONAR_SCANNER_DOWNLOAD_URL }} 
+            unzip -o /home/runner/target_ws/sonar-scanner.zip -d /home/runner/target_ws/
+            echo "/home/runner/target_ws/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}-linux/bin" >> $GITHUB_PATH
      
-        # - name: Download and set up sonar-scanner
-        #   env:
-        #     SONAR_SCANNER_DOWNLOAD_URL: https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${{ env.SONAR_SCANNER_VERSION }}-linux.zip
-        #   run: |
-        #     mkdir -p $HOME/.sonar
-        #     curl -sSLo $HOME/.sonar/sonar-scanner.zip ${{ env.SONAR_SCANNER_DOWNLOAD_URL }} 
-        #     unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
-        #     echo "$HOME/.sonar/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}-linux/bin" >> $GITHUB_PATH
         - name: Download and set up build-wrapper
           env:
             BUILD_WRAPPER_DOWNLOAD_URL: ${{ env.SONAR_SERVER_URL }}/static/cpp/build-wrapper-linux-x86.zip
           run: |
-            curl -sSLo /home/runner/.sonar/build-wrapper-linux-x86.zip ${{ env.BUILD_WRAPPER_DOWNLOAD_URL }}
-            unzip -o /home/runner/.sonar/build-wrapper-linux-x86.zip -d /home/runner/.sonar/
-            echo "/home/runner/.sonar/build-wrapper-linux-x86" >> $GITHUB_PATH
+            curl -sSLo /home/runner/target_ws/build-wrapper-linux-x86.zip ${{ env.BUILD_WRAPPER_DOWNLOAD_URL }}
+            unzip -o /home/runner/target_ws/build-wrapper-linux-x86.zip -d /home/runner/target_ws/
+            echo "/home/runner/target_ws/build-wrapper-linux-x86" >> $GITHUB_PATH
+        
         - name: Configure sonar-scanner
           run: |
-            # echo "$/home/runner/.sonar/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}-linux/bin" >> $GITHUB_PATH
-            echo "sonar.projectKey=cov_pkg" >> /home/runner/work/pose_covariance_ros/pose_covariance_ros/sonar-project.properties
-            echo "sonar.organization=mutti" >> /home/runner/work/pose_covariance_ros/pose_covariance_ros/sonar-project.properties
-            echo "sonar.cfamily.threads=2" >> /home/runner/work/pose_covariance_ros/pose_covariance_ros/sonar-project.properties
-            echo "sonar.cfamily.cache.enabled=false" >> /home/runner/work/pose_covariance_ros/pose_covariance_ros/sonar-project.properties
-            echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> /home/runner/work/pose_covariance_ros/pose_covariance_ros/sonar-project.properties
-            # cat /home/runner/target_ws/build/pose_covariance_ros/compile_commands.json
+            echo "sonar.projectKey=cov_pkg" >> /home/runner/target_ws/sonar-project.properties
+            echo "sonar.organization=mutti" >> /home/runner/target_ws/sonar-project.properties
+            echo "sonar.cfamily.threads=2" >> /home/runner/target_ws/sonar-project.properties
+            echo "sonar.cfamily.cache.enabled=false" >> /home/runner/target_ws/sonar-project.properties
+            echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> /home/runner/target_ws/sonar-project.properties
+            echo "sonar.sources=src/**" >>  /home/runner/target_ws/sonar-project.properties
+            echo "sonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUT_DIR }}" >>  /home/runner/target_ws/sonar-project.properties
 
         - name: Run build-wrapper
           run: |
