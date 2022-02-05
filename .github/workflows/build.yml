@@ -87,4 +87,5 @@ jobs:
              -Dsonar.projectKey=cov_pkg \
              -Dsonar.organization=mutti \
              -Dsonar.cfamily.threads=2 \
+             -Dsonar.projectBaseDir=/home/runner/target_ws/
              -Dsonar.sources=src/**
