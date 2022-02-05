@@ -58,16 +58,6 @@ jobs:
             curl -sSLo /home/runner/target_ws/build-wrapper-linux-x86.zip ${{ env.BUILD_WRAPPER_DOWNLOAD_URL }}
             unzip -o /home/runner/target_ws/build-wrapper-linux-x86.zip -d /home/runner/target_ws/
             echo "/home/runner/target_ws/build-wrapper-linux-x86" >> $GITHUB_PATH
-        
-        # - name: Configure sonar-scanner
-        #   run: |
-        #     echo "sonar.projectKey=cov_pkg" >> /home/runner/target_ws/sonar-project.properties
-        #     echo "sonar.organization=mutti" >> /home/runner/target_ws/sonar-project.properties
-        #     echo "sonar.cfamily.threads=2" >> /home/runner/target_ws/sonar-project.properties
-        #     echo "sonar.cfamily.cache.enabled=false" >> /home/runner/target_ws/sonar-project.properties
-        #     echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> /home/runner/target_ws/sonar-project.properties
-        #     echo "sonar.sources=src/**" >>  /home/runner/target_ws/sonar-project.properties
-        #     echo "sonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUT_DIR }}" >>  /home/runner/target_ws/sonar-project.properties
 
         - name: Run build-wrapper
           run: |
@@ -89,6 +79,6 @@ jobs:
              -Dsonar.organization=mutti \
              -Dsonar.cfamily.threads=2 \
              -Dsonar.projectBaseDir=/home/runner/target_ws/
-             -Dsonar.exclusions=build,devel,install
+             -Dsonar.exclusions=build/**
             #  -Dsonar.sources=src/pose_covariance_ros/pose_covariance_ros
                              
