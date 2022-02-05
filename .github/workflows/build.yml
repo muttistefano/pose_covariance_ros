@@ -76,6 +76,6 @@ jobs:
              -Dsonar.organization=mutti \
              -Dsonar.cfamily.threads=2 \
              -Dsonar.projectBaseDir=/home/runner/target_ws/ \
-             -Dsonar.sources=src/pose_covariance_ros/pose_covariance_ros/**
+             -Dsonar.sources=src/pose_covariance_ros/pose_covariance_ros/
              #  -Dsonar.exclusions=build/**, install/**
                              
