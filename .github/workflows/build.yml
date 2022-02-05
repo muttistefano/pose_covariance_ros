@@ -61,9 +61,7 @@ jobs:
 
         - name: Run build-wrapper
           run: |
-            ls
             cd /home/runner/target_ws/build/pose_covariance_ros/
-            # catkin clean -y
             source /opt/ros/noetic/setup.bash
             build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make clean all
             
@@ -72,13 +70,12 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           run: |
-            ls /home/runner/target_ws/
             cd /home/runner/target_ws/
             sonar-scanner --define sonar.host.url="${{ env.SONAR_SERVER_URL }}" --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}" \
              -Dsonar.projectKey=cov_pkg \
              -Dsonar.organization=mutti \
              -Dsonar.cfamily.threads=2 \
-             -Dsonar.projectBaseDir=/home/runner/target_ws/
-             -Dsonar.exclusions=build/**
-            #  -Dsonar.sources=src/pose_covariance_ros/pose_covariance_ros
+             -Dsonar.projectBaseDir=/home/runner/target_ws/ \
+             -Dsonar.sources=src/pose_covariance_ros/pose_covariance_ros/**
+             #  -Dsonar.exclusions=build/**, install/**
                              
