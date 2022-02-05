@@ -88,5 +88,5 @@ jobs:
              -Dsonar.organization=mutti \
              -Dsonar.cfamily.threads=2 \
              -Dsonar.projectBaseDir=/home/runner/target_ws/
-             -Dsonar.sources=/home/runner/target_ws/src/pose_covariance_ros/pose_covariance_ros
+             -Dsonar.sources=src/pose_covariance_ros/pose_covariance_ros
                              
