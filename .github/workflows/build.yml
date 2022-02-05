@@ -88,4 +88,4 @@ jobs:
              -Dsonar.organization=mutti \
              -Dsonar.cfamily.threads=2 \
              -Dsonar.projectBaseDir=/home/runner/target_ws/
-             -Dsonar.sources=src/**
+             -Dsonar.sources=src/
