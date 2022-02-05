@@ -82,5 +82,6 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           run: |
+            cat /home/runner/target_ws/sonar-scanner-4.4.0.2170-linux/conf/sonar-scanner.properties
             sonar-scanner --define sonar.host.url="${{ env.SONAR_SERVER_URL }}" --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
             # sonar-scanner -X
