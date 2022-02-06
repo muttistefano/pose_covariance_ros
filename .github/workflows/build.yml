@@ -10,12 +10,14 @@ jobs:
   industrial_ci:
       name: ROS ${{ matrix.ROS_DISTRO }} (${{ matrix.ROS_REPO }})
       runs-on: ubuntu-latest
+
       strategy:
         matrix: 
           ROS_DISTRO: [noetic]
           ROS_REPO:   [main]
           include: 
             - {ROS_DISTRO: noetic, ROS_REPO: main}
+
       env:
         CCACHE_DIR: "/home/runner/target_ws/.ccache" 
         SONAR_SCANNER_VERSION: 4.4.0.2170
@@ -23,6 +25,7 @@ jobs:
         # BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
         BUILD_WRAPPER_OUT_DIR: /home/runner/target_ws/
         ISOLATION: "shell"
+
       steps:
         - uses: actions/checkout@v2 
         
@@ -61,9 +64,10 @@ jobs:
 
         - name: Run build-wrapper
           run: |
-            cd /home/runner/target_ws/build/pose_covariance_ros/
+            cd /home/runner/target_ws/
+            catkin clean
             source /opt/ros/noetic/setup.bash
-            build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make clean all
+            build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} catkin build 
             
         - name: Run sonar-scanner
           env:
@@ -76,6 +80,25 @@ jobs:
              -Dsonar.organization=mutti \
              -Dsonar.cfamily.threads=2 \
              -Dsonar.projectBaseDir=/home/runner/target_ws/ \
-             -Dsonar.sources=src/pose_covariance_ros/pose_covariance_ros/
-             #  -Dsonar.exclusions=build/**, install/**
+             -Dsonar.sources=src
+             
+        # - name: Run build-wrapper
+        #   run: |
+        #     cd /home/runner/target_ws/build/pose_covariance_ros/
+        #     source /opt/ros/noetic/setup.bash
+        #     build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make clean all
+            
+        # - name: Run sonar-scanner
+        #   env:
+        #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        #   run: |
+        #     cd /home/runner/target_ws/
+        #     sonar-scanner --define sonar.host.url="${{ env.SONAR_SERVER_URL }}" --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}" \
+        #      -Dsonar.projectKey=cov_pkg \
+        #      -Dsonar.organization=mutti \
+        #      -Dsonar.cfamily.threads=2 \
+        #      -Dsonar.projectBaseDir=/home/runner/target_ws/ \
+        #      -Dsonar.sources=src/pose_covariance_ros/pose_covariance_ros/
+        #      #  -Dsonar.exclusions=build/**, install/**
                              
