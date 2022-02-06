@@ -121,10 +121,12 @@ struct tree_config{
   Eigen::Matrix<double, 6, 6, Eigen::RowMajor>              def_cov_;
   std::list<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>   covariance_override_;
 
-  tree_config(){}
-  tree_config(const tree_config& cfg_in) : model_(cfg_in.model_),jnt_ignore_(cfg_in.jnt_ignore_),jnt_add_(cfg_in.jnt_add_),joint_pub_name_(cfg_in.joint_pub_name_),
-                                           jnt_sub_(cfg_in.jnt_sub_),ignore_fixed_(cfg_in.ignore_fixed_),cov_only_valid_(cfg_in.cov_only_valid_),ignore_joint_cov_(cfg_in.ignore_joint_cov_),
-                                           override_list_(cfg_in.override_list_),def_cov_(cfg_in.def_cov_),covariance_override_(cfg_in.covariance_override_){}
+  tree_config() = default;
+  // tree_config(const tree_config& cfg_in) : model_(cfg_in.model_),jnt_ignore_(cfg_in.jnt_ignore_),jnt_add_(cfg_in.jnt_add_),joint_pub_name_(cfg_in.joint_pub_name_),
+  //                                          jnt_sub_(cfg_in.jnt_sub_),ignore_fixed_(cfg_in.ignore_fixed_),cov_only_valid_(cfg_in.cov_only_valid_),ignore_joint_cov_(cfg_in.ignore_joint_cov_),
+  //                                          override_list_(cfg_in.override_list_),def_cov_(cfg_in.def_cov_),covariance_override_(cfg_in.covariance_override_)  = default;
+
+  tree_config(const tree_config& cfg_in) = default;
 
 };
 
