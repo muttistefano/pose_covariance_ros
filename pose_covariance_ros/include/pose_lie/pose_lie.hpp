@@ -8,7 +8,7 @@
 #include <random>
 #include <chrono>
 
-namespace utils_PoseCov
+namespace utilsPoseCov
 {
     Eigen::Vector3d R2rpy(const  Eigen::Matrix<double, 3, 3, Eigen::RowMajor>& R)
     {
@@ -52,29 +52,29 @@ namespace utils_PoseCov
         return v_out;
     }
 
-    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> op_single(Eigen::Matrix<double, 3, 3, Eigen::RowMajor> A)
+    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> op_single(Eigen::Matrix<double, 3, 3, Eigen::RowMajor> const &A)
     {
       return -1 * A.trace() * Eigen::Matrix<double, 3, 3, Eigen::RowMajor>::Identity() + A;
     }
 
-    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> op_multi(Eigen::Matrix<double, 3, 3, Eigen::RowMajor> A, Eigen::Matrix<double, 3, 3, Eigen::RowMajor> B)
+    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> op_multi(Eigen::Matrix<double, 3, 3, Eigen::RowMajor> const &A, Eigen::Matrix<double, 3, 3, Eigen::RowMajor> const &B)
     {
       return op_single(A) * op_single(B) + op_single(A*B);
     }
 
 }
 
-namespace PoseCov3_ns
+namespace PoseCov3Ns
 {
 
-typedef Eigen::Matrix<double, 4, 4, Eigen::RowMajor> M4R;
-typedef Eigen::Matrix<double, 3, 3, Eigen::RowMajor> M3Rrot;
-typedef Eigen::Matrix<double, 6, 6, Eigen::RowMajor> M6;
-typedef Eigen::Matrix<double, 6, 1>                  V6;
-typedef Eigen::Vector3d                              V3trans;
-typedef Eigen::Vector3d                              V3rot;
-typedef Eigen::Vector3d                              M3ax;
-
+using  M4R      = Eigen::Matrix<double, 4, 4, Eigen::RowMajor>;
+using  M3Rrot   = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
+using  M6       = Eigen::Matrix<double, 6, 6, Eigen::RowMajor>;
+using  V6       = Eigen::Matrix<double, 6, 1>                 ;
+using  V3trans  = Eigen::Vector3d                             ;
+using  V3rot    = Eigen::Vector3d                             ;
+using  M3ax     = Eigen::Vector3d                             ;
+;
 class PoseCov3 
 {
  private:
@@ -96,7 +96,7 @@ class PoseCov3
   
   PoseCov3(const PoseCov3& pose_in);
 
-  PoseCov3(const M4R& M4_in);
+  explicit PoseCov3(const M4R& M4_in);
 
   PoseCov3(const M4R& M4_in, const M6& C_in);
 
@@ -106,7 +106,7 @@ class PoseCov3
   
   PoseCov3(double x,double y,double z,Eigen::Quaterniond q,int type, M3ax axis);
 
-  ~PoseCov3() {}
+  ~PoseCov3() = default;
 
   void setC(M6 C_in);
 

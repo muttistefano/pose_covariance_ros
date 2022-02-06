@@ -43,18 +43,15 @@ inline bool getParamMatrix(const ros::NodeHandle& nh, const std::string& key, Ei
             std::istringstream istr(ostr.str());
             istr >> Mat(i, j);
           }
-          catch(XmlRpc::XmlRpcException &e)
+          catch(const XmlRpc::XmlRpcException &e)
           {
+            ROS_ERROR_STREAM("ERROR reading matrix in yaml: " << e.getMessage());
             throw e;
-          }
-          catch(...)
-          {
-            throw;
           }
         }
       }
     }
-    catch (XmlRpc::XmlRpcException &e)
+    catch (const XmlRpc::XmlRpcException &e)
     {
       ROS_ERROR_STREAM("ERROR reading matrix in yaml: " << e.getMessage());
     }
@@ -69,29 +66,30 @@ class NodeTree
     NodeTree*               prev_;
     std::list<NodeTree*>    next_;
     // pose e covariance respect to previous joint
-    PoseCov3_ns::PoseCov3   pose_;
+    PoseCov3Ns::PoseCov3   pose_;
     // pose e covariance respect to tree root
-    PoseCov3_ns::PoseCov3   pose_base_;
+    PoseCov3Ns::PoseCov3   pose_base_;
     const int               type_;
     const Eigen::Vector3d   axis_;
   public:
     const std::string       name_;
     
     // Class contructor for single tree node
-    NodeTree(std::string name, NodeTree* ptr_prev, int type, Eigen::Vector3d axis);
+    NodeTree(NodeTree* ptr_prev, int type, Eigen::Vector3d axis,std::string const &name);
+    NodeTree(const NodeTree&) = default;
 
     // Initialize pose realtive to previous node in the tree
     void initPose(double x, double y, double z, double qx, double qy, double qz, double qw);
   
 
     // Initialize covariance matrix relative to previous node in the tree
-    void initCovariance(Eigen::Matrix<double, 6, 6, Eigen::RowMajor> cov_in );
+    void initCovariance(Eigen::Matrix<double, 6, 6, Eigen::RowMajor> const &cov_in );
 
     // Dumps node info
-    void plotInfo();
+    void plotInfo() const;
 
     // Sets value of position and covariance related to tree root 
-    void setPoseBase(PoseCov3_ns::PoseCov3 pose_in);
+    void setPoseBase(PoseCov3Ns::PoseCov3 const &pose_in);
 
     // Update value of node based on the input variable(e.g joint angle)
     void updateNode(double val);
@@ -99,11 +97,11 @@ class NodeTree
     // Set covariance of control variable to zero
     void fix_joint_cov();
 
-    std::string            getName();
-    NodeTree*              getPrevious();
-    std::list<NodeTree*>   getNext();
-    PoseCov3_ns::PoseCov3  getPose();
-    PoseCov3_ns::PoseCov3  getPoseBase();
+    std::string            getName() const;
+    NodeTree*              getPrevious() const;
+    std::list<NodeTree*>   getNext() const;
+    PoseCov3Ns::PoseCov3   getPose() const;
+    PoseCov3Ns::PoseCov3  getPoseBase() const;
 
 };
 
@@ -122,10 +120,6 @@ struct tree_config{
   std::list<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>   covariance_override_;
 
   tree_config() = default;
-  // tree_config(const tree_config& cfg_in) : model_(cfg_in.model_),jnt_ignore_(cfg_in.jnt_ignore_),jnt_add_(cfg_in.jnt_add_),joint_pub_name_(cfg_in.joint_pub_name_),
-  //                                          jnt_sub_(cfg_in.jnt_sub_),ignore_fixed_(cfg_in.ignore_fixed_),cov_only_valid_(cfg_in.cov_only_valid_),ignore_joint_cov_(cfg_in.ignore_joint_cov_),
-  //                                          override_list_(cfg_in.override_list_),def_cov_(cfg_in.def_cov_),covariance_override_(cfg_in.covariance_override_)  = default;
-
   tree_config(const tree_config& cfg_in) = default;
 
 };
@@ -145,16 +139,17 @@ class TreeStructure
   
     //TODO ignore fixed joints
     //TODO change rate
+    TreeStructure(const TreeStructure&) = default;
 
-    TreeStructure(tree_config cfg);
+    explicit TreeStructure(tree_config const &cfg);
 
-    ~TreeStructure();
+    ~TreeStructure() = default;
 
     // Read a joint state message and initialize the list of actuated joints
     void initJoints();
 
     // Looks for joint with given name in NodeTree list
-    NodeTree* nameLookup(std::string name_in );
+    NodeTree* nameLookup(std::string const &name_in );
 
     //Add node to tree structure, by inputting a urdf::LinkSharedPointer
     void addNode(urdf::LinkSharedPtr ln_ptr);
@@ -168,7 +163,7 @@ class TreeStructure
     // Fills PoseWithCovarianceStamped message
     void fillCovMsg(Eigen::Matrix<double, 6, 6, Eigen::RowMajor>cov , geometry_msgs::PoseWithCovarianceStamped& pose_msg);
 
-    void randChain();
+    void randChain() const;
 
     void poseCallback(const sensor_msgs::JointStateConstPtr &msg);
 

@@ -29,7 +29,7 @@ void NodeTree::initPose(double x, double y, double z, double qx, double qy, doub
 {
   double roll,pitch,yaw;
   Eigen::Quaterniond q_in = Eigen::Quaterniond(qw,qx,qy,qz);
-  pose_ = PoseCov3_ns::PoseCov3(x,y,z,q_in,type_,axis_);
+  pose_ = PoseCov3Ns::PoseCov3(x,y,z,q_in,type_,axis_);
 }
 
 // Initialize covariance matrix relative to previous node in the tree
@@ -59,9 +59,9 @@ void NodeTree::plotInfo()
 }
 
 // Sets value of position and covariance related to tree root
-void NodeTree::setPoseBase(PoseCov3_ns::PoseCov3 pose_in)
+void NodeTree::setPoseBase(PoseCov3Ns::PoseCov3 pose_in)
 {
-  this->pose_base_ = PoseCov3_ns::PoseCov3(pose_in);
+  this->pose_base_ = PoseCov3Ns::PoseCov3(pose_in);
 }
 
 // Update value of node based on the input variable(e.g joint angle)
@@ -79,8 +79,8 @@ void NodeTree::fix_joint_cov()
 std::string            NodeTree::getName()       {return this->name_;}
 NodeTree*              NodeTree::getPrevious()   {return this->prev_;}
 std::list<NodeTree*>   NodeTree::getNext()       {return this->next_;}
-PoseCov3_ns::PoseCov3  NodeTree::getPose()       {return this->pose_;}
-PoseCov3_ns::PoseCov3  NodeTree::getPoseBase()   {return this->pose_base_;}
+PoseCov3Ns::PoseCov3  NodeTree::getPose()       {return this->pose_;}
+PoseCov3Ns::PoseCov3  NodeTree::getPoseBase()   {return this->pose_base_;}
 
 
 

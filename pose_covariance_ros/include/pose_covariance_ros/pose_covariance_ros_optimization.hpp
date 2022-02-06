@@ -56,18 +56,16 @@ inline bool getParamMatrix(const ros::NodeHandle& nh, const std::string& key, Ei
             std::istringstream istr(ostr.str());
             istr >> Mat(i, j);
           }
-          catch(XmlRpc::XmlRpcException &e)
+          catch(const XmlRpc::XmlRpcException &e)
           {
+            ROS_ERROR_STREAM("ERROR reading matrix in yaml: " << e.getMessage());
             throw e;
           }
-          catch(...)
-          {
-            throw;
-          }
+
         }
       }
     }
-    catch (XmlRpc::XmlRpcException &e)
+    catch (const XmlRpc::XmlRpcException &e)
     {
       ROS_ERROR_STREAM("ERROR reading matrix in yaml: " << e.getMessage());
     }
@@ -82,9 +80,9 @@ class NodeTree
     NodeTree*               prev_;
     std::list<NodeTree*>    next_;
     // pose e covariance respect to previous joint
-    PoseCov3_ns::PoseCov3   pose_;
+    PoseCov3Ns::PoseCov3   pose_;
     // pose e covariance respect to tree root
-    PoseCov3_ns::PoseCov3   pose_base_;
+    PoseCov3Ns::PoseCov3   pose_base_;
     const int               type_;
     const Eigen::Vector3d   axis_;
   public:
@@ -106,7 +104,7 @@ class NodeTree
     void plotInfo();
 
     // Sets value of position and covariance related to tree root 
-    void setPoseBase(PoseCov3_ns::PoseCov3 pose_in);
+    void setPoseBase(PoseCov3Ns::PoseCov3 pose_in);
 
     // Update value of node based on the input variable(e.g joint angle)
     void updateNode(double val);
@@ -117,8 +115,8 @@ class NodeTree
     std::string            getName();
     NodeTree*              getPrevious();
     std::list<NodeTree*>   getNext();
-    PoseCov3_ns::PoseCov3  getPose();
-    PoseCov3_ns::PoseCov3  getPoseBase();
+    PoseCov3Ns::PoseCov3  getPose();
+    PoseCov3Ns::PoseCov3  getPoseBase();
 
 };
 
@@ -136,10 +134,8 @@ struct tree_config{
   Eigen::Matrix<double, 6, 6, Eigen::RowMajor>              def_cov_;
   std::list<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>   covariance_override_;
 
-  tree_config(){}
-  tree_config(const tree_config& cfg_in) : model_(cfg_in.model_),jnt_ignore_(cfg_in.jnt_ignore_),jnt_add_(cfg_in.jnt_add_),joint_pub_name_(cfg_in.joint_pub_name_),
-                                           ignore_fixed_(cfg_in.ignore_fixed_),cov_only_valid_(cfg_in.cov_only_valid_),ignore_joint_cov_(cfg_in.ignore_joint_cov_),
-                                           override_list_(cfg_in.override_list_),def_cov_(cfg_in.def_cov_),covariance_override_(cfg_in.covariance_override_){}
+  tree_config() = default;
+  tree_config(const tree_config& cfg_in) = default;
 
 };
 

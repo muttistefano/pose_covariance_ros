@@ -18,8 +18,8 @@
 // Implement a single node in the tree, associated with a joint in the URDF, with a pointer to the previous joints. 
 
 // Class contructor for single tree node
-NodeTree::NodeTree(std::string name, NodeTree* ptr_prev, int type, Eigen::Vector3d axis)
-  : name_(name),prev_(ptr_prev),type_(type),axis_(axis)
+NodeTree::NodeTree(NodeTree* ptr_prev, int type, Eigen::Vector3d axis,std::string const &name)
+  : prev_(ptr_prev),type_(type),axis_(axis),name_(name)
   {
      if (prev_!=nullptr)
      {
@@ -40,19 +40,18 @@ NodeTree::NodeTree(std::string name, NodeTree* ptr_prev, int type, Eigen::Vector
 // Initialize pose realtive to previous node in the tree
 void NodeTree::initPose(double x, double y, double z, double qx, double qy, double qz, double qw)
 {
-  double roll,pitch,yaw;
-  Eigen::Quaterniond q_in = Eigen::Quaterniond(qw,qx,qy,qz);
-  pose_ = PoseCov3_ns::PoseCov3(x,y,z,q_in,type_,axis_);
+  auto q_in = Eigen::Quaterniond(qw,qx,qy,qz);
+  pose_ = PoseCov3Ns::PoseCov3(x,y,z,q_in,type_,axis_);
 }
 
 // Initialize covariance matrix relative to previous node in the tree
-void NodeTree::initCovariance(Eigen::Matrix<double, 6, 6, Eigen::RowMajor> cov_in )
+void NodeTree::initCovariance(Eigen::Matrix<double, 6, 6, Eigen::RowMajor> const &cov_in )
 {
   pose_.setC(cov_in);
 }
 
 // Dumps node info
-void NodeTree::plotInfo()
+void NodeTree::plotInfo() const
 {
   std::cout << "Logname name:" << name_ << " ";
   if(prev_!=nullptr)
@@ -72,9 +71,9 @@ void NodeTree::plotInfo()
 }
 
 // Sets value of position and covariance related to tree root
-void NodeTree::setPoseBase(PoseCov3_ns::PoseCov3 pose_in)
+void NodeTree::setPoseBase(PoseCov3Ns::PoseCov3 const  &pose_in)
 {
-  this->pose_base_ = PoseCov3_ns::PoseCov3(pose_in);
+  this->pose_base_ = PoseCov3Ns::PoseCov3(pose_in);
 }
 
 // Update value of node based on the input variable(e.g joint angle)
@@ -89,18 +88,18 @@ void NodeTree::fix_joint_cov()
   pose_.fix_joint_cov();
 }
 
-std::string            NodeTree::getName()       {return this->name_;}
-NodeTree*              NodeTree::getPrevious()   {return this->prev_;}
-std::list<NodeTree*>   NodeTree::getNext()       {return this->next_;}
-PoseCov3_ns::PoseCov3  NodeTree::getPose()       {return this->pose_;}
-PoseCov3_ns::PoseCov3  NodeTree::getPoseBase()   {return this->pose_base_;}
+std::string            NodeTree::getName()     const {return this->name_;}
+NodeTree*              NodeTree::getPrevious() const {return this->prev_;}
+std::list<NodeTree*>   NodeTree::getNext()     const {return this->next_;}
+PoseCov3Ns::PoseCov3     NodeTree::getPose()     const {return this->pose_;}
+PoseCov3Ns::PoseCov3     NodeTree::getPoseBase() const {return this->pose_base_;}
 
 
 
 
 // Implement a tree, associated to the kinematic described in the URDF
 
-TreeStructure::TreeStructure(tree_config cfg)
+TreeStructure::TreeStructure(tree_config const &cfg)
   :nh_(ros::NodeHandle("~")),cfg_(cfg)
   {
 
@@ -111,11 +110,11 @@ TreeStructure::TreeStructure(tree_config cfg)
     while (!tree_exp)
     {
         tmp_link.clear();
-        for (auto& ix :ref_link)
+        for (const auto& ix :ref_link)
         {
-            if(ix->child_links.size() > 0)
+            if(!ix->child_links.empty())
             {
-                for (auto& ln :ix->child_links)
+                for (const auto& ln :ix->child_links)
                 {
                     tmp_link.push_back(ln);
                 }
@@ -124,7 +123,7 @@ TreeStructure::TreeStructure(tree_config cfg)
             this->addNode(ix);
         }
         ref_link = tmp_link;
-        if (ref_link.size() == 0) tree_exp = true;
+        if (ref_link.empty()) tree_exp = true;
 
     }
 
@@ -139,16 +138,13 @@ TreeStructure::TreeStructure(tree_config cfg)
 //    plotTree();
   }
 
-TreeStructure::~TreeStructure(){}
 
 // Read a joint state message and initialize the list of actuated joints
 void TreeStructure::initJoints()
 {
    boost::shared_ptr<sensor_msgs::JointState const> jnt_0 = ros::topic::waitForMessage<sensor_msgs::JointState>(cfg_.joint_pub_name_, nh_);
 
- ;
-
-  for (auto& namemsg:(*jnt_0).name)
+  for (const auto& namemsg:(*jnt_0).name)
   {
     for (auto& it:poses_)
     {
@@ -156,7 +152,7 @@ void TreeStructure::initJoints()
     }
   }
 
-  for (auto& namemsg:cfg_.jnt_add_)
+  for (const auto& namemsg:cfg_.jnt_add_)
   {
     for (auto& it:poses_)
     {
@@ -167,7 +163,7 @@ void TreeStructure::initJoints()
 
 
   std::cout << "published joints :" <<std::endl;
-  for (auto& pd:it_names_)
+  for (const auto& pd:it_names_)
   {
     std::cout << pd->name_ <<std::endl;
   }
@@ -176,7 +172,7 @@ void TreeStructure::initJoints()
 }
 
 // Looks for joint with given name in NodeTree list
-NodeTree* TreeStructure::nameLookup(std::string name_in )
+NodeTree* TreeStructure::nameLookup(std::string const &name_in )
 {
   for (auto& jn :poses_)
   {
@@ -188,7 +184,7 @@ NodeTree* TreeStructure::nameLookup(std::string name_in )
 //Add node to tree structure, by inputting a urdf::LinkSharedPointer
 void TreeStructure::addNode(urdf::LinkSharedPtr ln_ptr)
 {
-  for (auto& jn :ln_ptr->child_joints)
+  for (const auto& jn :ln_ptr->child_joints)
   {
     NodeTree* parent_ptr = nullptr;
     if(ln_ptr->parent_joint != NULL)
@@ -196,8 +192,9 @@ void TreeStructure::addNode(urdf::LinkSharedPtr ln_ptr)
       parent_ptr = nameLookup(ln_ptr->parent_joint->name);
 
     }
-    Eigen::Vector3d jnt_axis = Eigen::Vector3d(jn->axis.x, jn->axis.y, jn->axis.z);
-    poses_.push_back(NodeTree(jn->name,parent_ptr,jn->type,jnt_axis));
+
+    auto jnt_axis = Eigen::Vector3d(jn->axis.x, jn->axis.y, jn->axis.z);
+    poses_.emplace_back(NodeTree(parent_ptr,jn->type,jnt_axis,jn->name));
     poses_.back().initPose(jn->parent_to_joint_origin_transform.position.x,
                             jn->parent_to_joint_origin_transform.position.y,
                             jn->parent_to_joint_origin_transform.position.z,
@@ -216,11 +213,11 @@ void TreeStructure::addNode(urdf::LinkSharedPtr ln_ptr)
 
     if( it_ov != cfg_.override_list_.end())
     {
-      std::list<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>::iterator it_mat = cfg_.covariance_override_.begin();
+      auto it_mat = cfg_.covariance_override_.begin();
       std::advance(it_mat, index);
       poses_.back().initCovariance(*it_mat);
     }
-    else if (poses_.size()==1 || ( cfg_.ignore_fixed_ and jn->type==6))
+    else if (poses_.size()==1 || ( cfg_.ignore_fixed_ && jn->type==6))
     {
       poses_.back().initCovariance(Eigen::Matrix<double, 6, 6, Eigen::RowMajor>::Zero());
       // std::cout << "fixed joint" << std::endl;
@@ -233,7 +230,7 @@ void TreeStructure::addNode(urdf::LinkSharedPtr ln_ptr)
         tmp_cov_(0,0) = tmp_cov_(0,0) * int(abs(jn->parent_to_joint_origin_transform.position.x) > 1e-5);
         tmp_cov_(1,1) = tmp_cov_(1,1) * int(abs(jn->parent_to_joint_origin_transform.position.y) > 1e-5);
         tmp_cov_(2,2) = tmp_cov_(2,2) * int(abs(jn->parent_to_joint_origin_transform.position.z) > 1e-5);
-        Eigen::Quaterniond q = Eigen::Quaterniond(jn->parent_to_joint_origin_transform.rotation.w,jn->parent_to_joint_origin_transform.rotation.x,jn->parent_to_joint_origin_transform.rotation.y,jn->parent_to_joint_origin_transform.rotation.z);
+        auto q = Eigen::Quaterniond(jn->parent_to_joint_origin_transform.rotation.w,jn->parent_to_joint_origin_transform.rotation.x,jn->parent_to_joint_origin_transform.rotation.y,jn->parent_to_joint_origin_transform.rotation.z);
         Eigen::Vector3d rpy  = q.normalized().toRotationMatrix().eulerAngles(0, 1, 2);
         tmp_cov_(3,3) = tmp_cov_(3,3) * int(abs(rpy[0]) > 1e-5);
         tmp_cov_(4,4) = tmp_cov_(4,4) * int(abs(rpy[1]) > 1e-5);
@@ -282,14 +279,14 @@ void TreeStructure::fillCovMsg(Eigen::Matrix<double, 6, 6, Eigen::RowMajor>cov ,
 
   for (int i=0;i<36;i++)
   {
-    int rid = int(floor(i/6));
-    int cid = int(i%6);
+    auto rid = int(floor(i/6));
+    auto cid = int(i%6);
     pose_msg.pose.covariance[i] = cov(rid,cid);
   }
 
 }
 
-void TreeStructure::randChain()
+void TreeStructure::randChain() const
 {
   for (auto& it:it_names_) {
     double val = (3.14 + 3.14) * ( (double)rand() / (double)RAND_MAX ) + -3.14;
@@ -310,7 +307,7 @@ void TreeStructure::poseCallback(const sensor_msgs::JointStateConstPtr &msg)
 
   for (int j=0;j<pose_pub_.size();j++) {
 
-    std::list<NodeTree*>:: iterator it = it_names_.begin();
+    auto it = it_names_.begin();
     std::advance(it, j);
 
     Eigen::Matrix<double, 4, 4, Eigen::RowMajor> tmpM4 = (*it)->getPoseBase().getMU();
@@ -325,20 +322,6 @@ void TreeStructure::poseCallback(const sensor_msgs::JointStateConstPtr &msg)
 
     tf2::Quaternion tfqt;
     tf3d.getRotation(tfqt);
-
-
-    // geometry_msgs::TransformStamped transformStamped;
-    // transformStamped.header.stamp = ros::Time::now();
-    // transformStamped.header.frame_id = "world";
-    // transformStamped.child_frame_id = msg->name[j] + "_cov";
-    // transformStamped.transform.translation.x = tmpM4(0,3);
-    // transformStamped.transform.translation.y = tmpM4(1,3);
-    // transformStamped.transform.translation.z = tmpM4(2,3);
-
-    // transformStamped.transform.rotation.x = tfqt.x();
-    // transformStamped.transform.rotation.y = tfqt.y();
-    // transformStamped.transform.rotation.z = tfqt.z();
-    // transformStamped.transform.rotation.w = tfqt.w();
 
 
 //TODO cerca cov in paramtri per singolo giunto per nome
@@ -356,7 +339,6 @@ void TreeStructure::poseCallback(const sensor_msgs::JointStateConstPtr &msg)
 
     pose_pub_[j].publish(pose_msg);
 
-    // std::cout << it_names_[j]->getName() << "  " << pose_pub_[j].getTopic() << std::endl;
 
   }
   // plotTree();
@@ -364,7 +346,7 @@ void TreeStructure::poseCallback(const sensor_msgs::JointStateConstPtr &msg)
 
 void TreeStructure::getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses)
 {
-  for(auto& ps:poses_)
+  for(const auto& ps:poses_)
   {
     vec_poses.push_back(ps.getPose().getMU());
   }
@@ -372,7 +354,7 @@ void TreeStructure::getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::Ro
 
 void TreeStructure::getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses)
 {
-  for(auto& ps:poses_)
+  for(const auto& ps:poses_)
   {
     vec_poses.push_back(ps.getPoseBase().getMU());
   }
@@ -380,7 +362,7 @@ void TreeStructure::getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen
 
 void TreeStructure::getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses)
 {
-  for(auto& ps:poses_)
+  for(const auto& ps:poses_)
   {
     vec_poses.push_back(ps.getPose().getC());
   }
@@ -388,7 +370,7 @@ void TreeStructure::getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::Row
 
 void TreeStructure::getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses)
 {
-  for(auto& ps:poses_)
+  for(const auto& ps:poses_)
   {
     vec_poses.push_back(ps.getPoseBase().getC());
   }
