@@ -194,7 +194,8 @@ void TreeStructure::addNode(urdf::LinkSharedPtr ln_ptr)
     }
 
     auto jnt_axis = Eigen::Vector3d(jn->axis.x, jn->axis.y, jn->axis.z);
-    poses_.emplace_back(NodeTree(parent_ptr,jn->type,jnt_axis,jn->name));
+    
+    poses_.emplace_back(parent_ptr,jn->type,jnt_axis,jn->name);
     poses_.back().initPose(jn->parent_to_joint_origin_transform.position.x,
                             jn->parent_to_joint_origin_transform.position.y,
                             jn->parent_to_joint_origin_transform.position.z,
@@ -247,9 +248,9 @@ void TreeStructure::addNode(urdf::LinkSharedPtr ln_ptr)
 }
 
 //plots tree structure
-void TreeStructure::plotTree()
+void TreeStructure::plotTree() const
 {
-  for (auto& nd :poses_)
+  for (const auto& nd :poses_)
   {
     nd.plotInfo();
   }
@@ -344,7 +345,7 @@ void TreeStructure::poseCallback(const sensor_msgs::JointStateConstPtr &msg)
   // plotTree();
 }
 
-void TreeStructure::getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses)
+void TreeStructure::getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses) const
 {
   for(const auto& ps:poses_)
   {
@@ -352,7 +353,7 @@ void TreeStructure::getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::Ro
   }
 }
 
-void TreeStructure::getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses)
+void TreeStructure::getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses) const
 {
   for(const auto& ps:poses_)
   {
@@ -360,7 +361,7 @@ void TreeStructure::getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen
   }
 }
 
-void TreeStructure::getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses)
+void TreeStructure::getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses) const
 {
   for(const auto& ps:poses_)
   {
@@ -368,7 +369,7 @@ void TreeStructure::getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::Row
   }
 }
 
-void TreeStructure::getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses)
+void TreeStructure::getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses) const
 {
   for(const auto& ps:poses_)
   {

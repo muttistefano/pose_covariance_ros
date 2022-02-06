@@ -46,7 +46,7 @@ inline bool getParamMatrix(const ros::NodeHandle& nh, const std::string& key, Ei
           catch(const XmlRpc::XmlRpcException &e)
           {
             ROS_ERROR_STREAM("ERROR reading matrix in yaml: " << e.getMessage());
-            throw e;
+            throw ;
           }
         }
       }
@@ -155,7 +155,7 @@ class TreeStructure
     void addNode(urdf::LinkSharedPtr ln_ptr);
 
     //plots tree structure
-    void plotTree();
+    void plotTree() const;
 
     // Computes kinematic chain 
     void computeChain();
@@ -167,13 +167,13 @@ class TreeStructure
 
     void poseCallback(const sensor_msgs::JointStateConstPtr &msg);
 
-    void getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses); 
+    void getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses) const; 
 
-    void getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses);
+    void getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses) const;
 
-    void getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses);
+    void getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses) const;
 
-    void getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses);
+    void getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses) const;
 
 
 

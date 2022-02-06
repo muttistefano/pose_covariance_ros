@@ -59,7 +59,7 @@ inline bool getParamMatrix(const ros::NodeHandle& nh, const std::string& key, Ei
           catch(const XmlRpc::XmlRpcException &e)
           {
             ROS_ERROR_STREAM("ERROR reading matrix in yaml: " << e.getMessage());
-            throw e;
+            throw ;
           }
 
         }
@@ -182,13 +182,13 @@ class TreeStructure
 
     void updateall(std::vector<double> jnt);
 
-    void getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses); 
+    void getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses)  ; 
 
-    void getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses);
+    void getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses)  ;
 
-    void getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses);
+    void getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses)  ;
 
-    void getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses);
+    void getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses)  ;
 
     Eigen::Matrix<double, 6, 6, Eigen::RowMajor> getTipCov();
 

@@ -307,7 +307,7 @@ void TreeStructure::updateall(std::vector<double> jnt) //#TODO
 
 }
 
-void TreeStructure::getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses)
+void TreeStructure::getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses) 
 {
   for(auto& ps:poses_)
   {
@@ -315,7 +315,7 @@ void TreeStructure::getPosesMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::Ro
   }
 }
 
-void TreeStructure::getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses)
+void TreeStructure::getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>& vec_poses) 
 {
   for(auto& ps:poses_)
   {
@@ -323,7 +323,7 @@ void TreeStructure::getPosesBaseMU(std::vector<Eigen::Matrix<double, 4, 4, Eigen
   }
 }
 
-void TreeStructure::getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses)
+void TreeStructure::getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses) 
 {
   for(auto& ps:poses_)
   {
@@ -331,7 +331,7 @@ void TreeStructure::getPosesC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::Row
   }
 }
 
-void TreeStructure::getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses)
+void TreeStructure::getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>& vec_poses) 
 {
   for(auto& ps:poses_)
   {
