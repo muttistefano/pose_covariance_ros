@@ -82,6 +82,17 @@ jobs:
              -Dsonar.projectBaseDir=/home/runner/target_ws/ \
              -Dsonar.sources=src
              
+        - name: cccc action step
+          uses: sarnold/cccc-action@main
+          with:
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: upload metrics report
+          uses: actions/upload-artifact@v2
+          with:
+            name: metrics
+            path: ./metrics
+
         # - name: Run build-wrapper
         #   run: |
         #     cd /home/runner/target_ws/build/pose_covariance_ros/
