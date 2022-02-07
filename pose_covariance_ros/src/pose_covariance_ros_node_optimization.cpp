@@ -48,12 +48,11 @@ int main(int argc, char** argv)
     if (nh.hasParam("additional_joints"))
     {
         nh.getParam("additional_joints", cfg.jnt_add_);
-        std::cout << "additional_joints : "  << std::endl;
+        ROS_INFO_STREAM("Additional joints  \n");
         for(auto& jt:cfg.jnt_add_)
         {
-            std::cout << jt << std::endl;
+            ROS_INFO_STREAM("Additional joints: " << jt << "\n");
         }
-        std::cout << std::endl;
     }
 
     // retrieves a list of joints to override covariance and their matrix 
@@ -79,12 +78,11 @@ int main(int argc, char** argv)
             }
         }
 
-        std::cout << "override_list : "  << std::endl;
+         ROS_INFO_STREAM("Overrided list \n");
         for(auto& jt:cfg.override_list_)
         {
-            std::cout << jt << std::endl;
+            ROS_INFO_STREAM("Overrided elements " << jt << "\n");
         }
-        std::cout << std::endl;
     }
 
     // retrieves the default covariance matrix
@@ -130,38 +128,6 @@ int main(int argc, char** argv)
     std::vector<Eigen::Matrix<double, 6, 1>> jnt;
     int max_n;
     
-    // tree.optimize_joints(vec_poses,jnt,max_n);
-
-    // while(ros::ok())
-    // {
-    //     std::uniform_real_distribution<double> unif(-6.28,6.28);
-    //     std::default_random_engine re;
-    //     re.seed(std::chrono::system_clock::now().time_since_epoch().count());
-    //     double d1 = unif(re);
-    //     double d2 = unif(re);
-    //     double d3 = unif(re);
-    //     double d4 = unif(re);
-    //     double d5 = unif(re);
-    //     double d6 = unif(re);
-    //     std::cout << d1 << " " << d2 << " " << d3 << " " << d4 << " " << d5 << " " << d6 << " " << std::endl;
-    //     std::vector<double> jnt = {d1,d2,d3,d4,d5,d6};
-    //     tree.poseCallback(jnt);
-    //     ros::Duration(0.5).sleep();
-        
-    // }
-
-    // tree.plotTree();
     ros::waitForShutdown();
-    // tree.plot_tree();
-    // tree.compute_chain();
-    // tree.plot_tree();
-    // ros::spin();     
-
-    // ros::AsyncSpinner spinner(4); // Use 4 threads
-    // spinner.start(); 
-    // ros::Duration(5).sleep();  
- 
-    // tf::TransformListener listener;
-    // listener.getFrames()
 
 }

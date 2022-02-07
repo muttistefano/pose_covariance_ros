@@ -10,17 +10,17 @@ NodeTree::NodeTree(std::string name, NodeTree* ptr_prev, int type, Eigen::Vector
   {
      if (prev_!=nullptr)
      {
-      std::cout << "created name :" << name_ ;
-      std::cout << "  parent " << prev_->name_;
-      std::cout << "  type " << type_;
-      std::cout << "  axis " << axis_[0] << axis_[1] << axis_[2] << std::endl;
+      ROS_INFO_STREAM("created name :" << name_ );
+      ROS_INFO_STREAM("  parent " << prev_->name_);
+      ROS_INFO_STREAM("  type " << type_);
+      ROS_INFO_STREAM("  axis " << axis_[0] << axis_[1] << axis_[2] << "\n");
      }
      else
      {
-       std::cout << "created nome name :" << name_ ;
-       std::cout << "  parent  NULL";
-       std::cout << "  type " << type_;
-      std::cout << "  axis " << axis_[0] << axis_[1] << axis_[2] << std::endl;
+       ROS_INFO_STREAM("created nome name :" << name_ );
+       ROS_INFO_STREAM("  parent  NULL");
+       ROS_INFO_STREAM("  type " << type_);
+       ROS_INFO_STREAM("  axis " << axis_[0] << axis_[1] << axis_[2] << "\n" );
      }
   }
 
@@ -41,20 +41,17 @@ void NodeTree::initCovariance(Eigen::Matrix<double, 6, 6, Eigen::RowMajor> cov_i
 // Dumps node info
 void NodeTree::plotInfo()
 {
-  std::cout << "Logname name:" << name_ << " ";
+  ROS_INFO_STREAM("Logname name:" << name_ << " ");
   if(prev_!=nullptr)
   {
-    std::cout << "prev_name :" << prev_->name_ << "\n";
+    ROS_INFO_STREAM("prev_name :" << prev_->name_ << "\n");
   }
   else{
-    std::cout << "prev_name :" << "Null" << "\n";
+    ROS_INFO_STREAM("prev_name :" << "Null" << "\n");
   }
 
-  // std::cout << "next_size :"  << next_.size()       << std::endl;
-  std::cout << "MU: \n"       << pose_.getMU()      << "\n";
-  std::cout << "cov: \n"      << pose_.getC()       << "\n\n\n";
-  // std::cout << "base MU: \n"  << pose_base_.getMU() << "\n";
-  // std::cout << "base cov: \n" << pose_base_.getC()  << "\n\n\n\n\n\n\n\n\n\n";
+  ROS_INFO_STREAM("MU: \n"       << pose_.getMU()      << "\n");
+  ROS_INFO_STREAM("cov: \n"      << pose_.getC()       << "\n\n\n");
 
 }
 
@@ -116,7 +113,7 @@ TreeStructure::TreeStructure(tree_config cfg)
     }
 
     initJoints();
-    std::cout << "Controlled joints : " << it_names_.size() << "\n"; 
+    ROS_INFO_STREAM("Controlled joints : " << it_names_.size() << "\n"); 
     act_joints_ =  it_names_.size();
     // srv_opt_ = nh_.advertiseService("srv_opt", (bool)&TreeStructure::optimize_joints,this);
 
@@ -150,10 +147,10 @@ void TreeStructure::initJoints()
 
 
 
-  std::cout << "published joints :" <<std::endl;
+  ROS_INFO_STREAM("published joints :" <<std::endl);
   for (auto& pd:it_names_)
   {
-    std::cout << pd->name_ <<std::endl;
+    ROS_INFO_STREAM(pd->name_ <<std::endl);
   }
 
 
@@ -193,7 +190,7 @@ void TreeStructure::addNode(urdf::LinkSharedPtr ln_ptr)
 
     if(jn->limits != NULL)
     {
-      std::cout << jn->limits->lower << " " << jn->limits->upper << std::endl;
+      ROS_INFO_STREAM(jn->limits->lower << " " << jn->limits->upper << std::endl);
       poses_.back().upper_limit = jn->limits->upper;
       poses_.back().lower_limit = jn->limits->lower;
     }
@@ -214,7 +211,6 @@ void TreeStructure::addNode(urdf::LinkSharedPtr ln_ptr)
     else if (poses_.size()==1 || ( cfg_.ignore_fixed_ and jn->type==6))
     {
       poses_.back().initCovariance(Eigen::Matrix<double, 6, 6, Eigen::RowMajor>::Zero());
-      // std::cout << "fixed joint" << std::endl;
     }
     else
     {
@@ -248,7 +244,7 @@ void TreeStructure::plotTree()
     nd.plotInfo();
   }
 
-std::cout << "tree length " << poses_.size() << std::endl;
+ROS_INFO_STREAM("tree length " << poses_.size() << std::endl);
 }
 
 // Computes kinematic chain
@@ -294,16 +290,11 @@ void TreeStructure::updateall(std::vector<double> jnt) //#TODO
   std::list<NodeTree*>::iterator it = it_names_.begin();
   
   for (int j=0;j<act_joints_;j++) {
-    // std::cout << (*it)->getName() << "" << jnt[j] <<std::endl;
     (*it)->updateNode(jnt[j]);
-    // std::cout << (*it)->getName() << std::endl; //TODO testa con 2 catene , con il camera joint in cfg file
     std::advance(it, 1);
   }
 
   this->computeChain();
-
-  // std::cout << (*it_names_.back()).getName() << std::endl;
-  // std::cout << (*it_names_.back()).getPoseBase().getC() << std::endl;
 
 }
 
@@ -342,7 +333,7 @@ void TreeStructure::getPosesBaseC(std::vector<Eigen::Matrix<double, 6, 6, Eigen:
 Eigen::Matrix<double, 6, 6, Eigen::RowMajor> TreeStructure::getTipCov()
 {
   auto it = it_names_.back();
-  std::cout << (*it).getName();
+  ROS_INFO_STREAM((*it).getName());
   return (*it).getPoseBase().getC();
 };
 
@@ -424,13 +415,8 @@ bool TreeStructure::optimize_joints(pose_covariance_ros::srv_opt::Request  &req,
     if (found_ik)
     {
       kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
-      // for(std::size_t i=0; i < joint_names.size(); ++i)
-      // {
-      //   ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
-      // }
       sols++;
       this->updateall(joint_values);
-      // std::cout << this->getTipCov() << std::endl;
       cov_tmp = this->getTipCov();
       for(int id=0;id<6;id++)
       {
@@ -444,7 +430,6 @@ bool TreeStructure::optimize_joints(pose_covariance_ros::srv_opt::Request  &req,
     }
     else
     {
-      // ROS_INFO("Did not find IK solution");
       continue;//TODO
     }
  

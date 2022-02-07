@@ -42,12 +42,11 @@ int main(int argc, char** argv)
     if (nh.hasParam("additional_joints"))
     {
         nh.getParam("additional_joints", cfg.jnt_add_);
-        std::cout << "additional_joints : "  << std::endl;
+        ROS_INFO_STREAM("additional_joints : \n");
         for(auto& jt:cfg.jnt_add_)
         {
-            std::cout << jt << std::endl;
+            ROS_INFO_STREAM(jt << "\n");
         }
-        std::cout << std::endl;
     }
 
     // retrieves a list of joints to override covariance and their matrix 
@@ -73,12 +72,11 @@ int main(int argc, char** argv)
             }
         }
 
-        std::cout << "override_list : "  << std::endl;
+        ROS_INFO_STREAM("override_list: \n");
         for(auto& jt:cfg.override_list_)
         {
-            std::cout << jt << std::endl;
+            ROS_INFO_STREAM(jt << "\n");
         }
-        std::cout << std::endl;
     }
 
     // retrieves the default covariance matrix
